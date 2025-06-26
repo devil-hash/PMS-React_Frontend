@@ -134,6 +134,7 @@ const EmployeeDashboard: React.FC = () => {
                   documents: []
                 }
               ],
+              skills: [],
               submittedDate: "2023-08-10"
             },
             milestones: [

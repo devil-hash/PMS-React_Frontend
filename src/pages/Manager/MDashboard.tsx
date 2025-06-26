@@ -8,13 +8,13 @@ import TeamPerformanceChart from '../../components/TeamPerformanceChart';
 import ProjectReview from '../../components/ProjectReview';
 import GoalReview from '../../components/GoalReview';
 import OverallReview from '../../components/OverallReview';
-import { Review } from '../../types/reviewTypes';
+import { Review, SkillCategory, SkillQuestion } from '../../types/reviewTypes';
 
 const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeAction, setActiveAction] = useState<'newReview' | 'teamGoals' | 'reports' | null>(null);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
-  const [activeReviewTab, setActiveReviewTab] = useState<'goals' | 'projects' | 'overall'>('goals');
+  const [activeReviewTab, setActiveReviewTab] = useState<'goals' | 'projects' | 'overall' | 'skills'>('goals');
   const [isViewingCompletedReview, setIsViewingCompletedReview] = useState(false);
   
   const stats = [
@@ -51,6 +51,44 @@ const ManagerDashboard: React.FC = () => {
           managerRating: 4.5,
           managerComments: 'The redesign was very well received by users. Great attention to detail in the UI implementation.'
         }
+      ],
+      skills: [
+        {
+          category: 'Technical Skills',
+          description: 'Evaluation of core technical competencies',
+          questions: [
+            {
+              question: 'Demonstrates strong proficiency in React and TypeScript',
+              selfRating: 4,
+              managerRating: 4.5,
+              managerComments: 'John has excellent technical skills and is a go-to resource for complex React issues',
+              examples: 'Implemented complex state management solution',
+              improvementAreas: 'Could explore more advanced TypeScript patterns'
+            },
+            {
+              question: 'Ability to debug and solve complex problems',
+              selfRating: 4,
+              managerRating: 4,
+              managerComments: 'Consistently solves difficult technical challenges',
+              examples: 'Resolved critical production issue within 2 hours',
+              improvementAreas: 'Document solutions more thoroughly'
+            }
+          ]
+        },
+        {
+          category: 'Communication',
+          description: 'Effectiveness in team communication',
+          questions: [
+            {
+              question: 'Clearly communicates technical concepts to team members',
+              selfRating: 3,
+              managerRating: 3.5,
+              managerComments: 'Could improve documentation of complex solutions',
+              examples: 'Led knowledge sharing session on new framework',
+              improvementAreas: 'More detailed technical documentation'
+            }
+          ]
+        }
       ]
     },
     { 
@@ -78,6 +116,36 @@ const ManagerDashboard: React.FC = () => {
           impact: 'Increased user engagement by 25%',
           managerRating: 4,
           managerComments: 'The redesign significantly improved engagement metrics. Well done!'
+        }
+      ],
+      skills: [
+        {
+          category: 'UI/UX Design',
+          description: 'Core design skills and user experience',
+          questions: [
+            {
+              question: 'Creates intuitive and user-friendly interfaces',
+              selfRating: 4,
+              managerRating: 4.5,
+              managerComments: 'Jane has an excellent eye for design and usability',
+              examples: 'Redesigned checkout flow increased conversion by 15%',
+              improvementAreas: 'More A/B testing of design variations'
+            }
+          ]
+        },
+        {
+          category: 'Collaboration',
+          description: 'Working with cross-functional teams',
+          questions: [
+            {
+              question: 'Works effectively with developers to implement designs',
+              selfRating: 3,
+              managerRating: 3,
+              managerComments: 'Could provide more detailed design specifications',
+              examples: 'Improved handoff process with dev team',
+              improvementAreas: 'More detailed design system documentation'
+            }
+          ]
         }
       ]
     },
@@ -112,6 +180,36 @@ const ManagerDashboard: React.FC = () => {
           managerComments: 'Feature launch was very successful with positive user feedback'
         }
       ],
+      skills: [
+        {
+          category: 'Product Management',
+          description: 'Core product management competencies',
+          questions: [
+            {
+              question: 'Effectively prioritizes product features',
+              selfRating: 4,
+              managerRating: 4.5,
+              managerComments: 'Excellent prioritization skills based on business value',
+              examples: 'Implemented new prioritization framework',
+              improvementAreas: 'More data-driven prioritization'
+            }
+          ]
+        },
+        {
+          category: 'Leadership',
+          description: 'Team leadership and guidance',
+          questions: [
+            {
+              question: 'Motivates and guides the product team',
+              selfRating: 4,
+              managerRating: 4,
+              managerComments: 'Strong leadership skills demonstrated',
+              examples: 'Led team through challenging product pivot',
+              improvementAreas: 'More frequent 1:1s with team members'
+            }
+          ]
+        }
+      ],
       overallFeedback: 'Sarah has performed exceptionally well this quarter, delivering all planned features on time and exceeding expectations in stakeholder management.'
     },
     { 
@@ -142,6 +240,36 @@ const ManagerDashboard: React.FC = () => {
           managerComments: 'Smooth infrastructure upgrade with minimal downtime'
         }
       ],
+      skills: [
+        {
+          category: 'Technical Skills',
+          description: 'DevOps technical expertise',
+          questions: [
+            {
+              question: 'Maintains and improves deployment infrastructure',
+              selfRating: 4,
+              managerRating: 4,
+              managerComments: 'Solid technical skills in DevOps area',
+              examples: 'Implemented automated rollback system',
+              improvementAreas: 'More documentation of infrastructure changes'
+            }
+          ]
+        },
+        {
+          category: 'Communication',
+          description: 'Technical communication skills',
+          questions: [
+            {
+              question: 'Documents processes and changes clearly',
+              selfRating: 3,
+              managerRating: 3,
+              managerComments: 'Could improve documentation of infrastructure changes',
+              examples: 'Created new onboarding docs for DevOps',
+              improvementAreas: 'More detailed change logs'
+            }
+          ]
+        }
+      ],
       overallFeedback: 'David made good progress on his goals but could benefit from more proactive communication about challenges faced.'
     },
   ];
@@ -158,6 +286,14 @@ const ManagerDashboard: React.FC = () => {
     { title: 'Employee Engagement Survey', date: '2023-04-20', type: 'PDF' },
   ];
 
+  const ratingOptions = [
+    { value: 1, label: '1 - Needs Improvement' },
+    { value: 2, label: '2 - Developing' },
+    { value: 3, label: '3 - Meets Expectations' },
+    { value: 4, label: '4 - Exceeds Expectations' },
+    { value: 5, label: '5 - Outstanding' }
+  ];
+
   const handleHomeClick = () => {
     navigate('/manager', { replace: true });
   };
@@ -172,6 +308,20 @@ const ManagerDashboard: React.FC = () => {
     setActiveReviewTab('goals');
   };
 
+  const renderRatingDropdown = (value: number, onChange: (value: number) => void) => (
+    <select 
+      className="border border-gray-300 rounded p-2"
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+    >
+      {ratingOptions.map(option => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar onHomeClick={handleHomeClick} />
@@ -181,7 +331,7 @@ const ManagerDashboard: React.FC = () => {
           <h1 className="text-2xl font-semibold mb-6">Manager Dashboard</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
+            {stats.map((stat, index: number) => (
               <DashboardCard 
                 key={index} 
                 title={stat.title} 
@@ -199,13 +349,13 @@ const ManagerDashboard: React.FC = () => {
                   title="Pending Your Review" 
                   reviews={pendingReviews} 
                   status="pending"
-                  onReviewClick={(review) => handleReviewClick(review, false)}
+                  onReviewClick={(review: Review) => handleReviewClick(review, false)}
                 />
                 <EmployeeReviewList 
                   title="Completed Reviews" 
                   reviews={completedReviews} 
                   status="completed"
-                  onReviewClick={(review) => handleReviewClick(review, true)}
+                  onReviewClick={(review: Review) => handleReviewClick(review, true)}
                 />
               </div>
             </div>
@@ -249,37 +399,9 @@ const ManagerDashboard: React.FC = () => {
                 {activeAction === 'reports' && 'Available Reports'}
               </h3>
               
-              {activeAction === 'newReview' && (
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Select Employee</label>
-                    <select className="border border-gray-300 rounded p-2">
-                      <option>John Doe (Software Engineer)</option>
-                      <option>Jane Smith (UX Designer)</option>
-                      <option>Mike Johnson (QA Engineer)</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Review Type</label>
-                    <select className="border border-gray-300 rounded p-2">
-                      <option>Quarterly Performance Review</option>
-                      <option>Annual Performance Review</option>
-                      <option>Project Completion Review</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Deadline</label>
-                    <input type="date" className="border border-gray-300 rounded p-2" />
-                  </div>
-                  <button className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mt-4 flex items-center gap-2">
-                    <span>📝</span> Create Review
-                  </button>
-                </div>
-              )}
-
               {activeAction === 'teamGoals' && (
                 <div className="space-y-6">
-                  {teamGoals.map((goal, index) => (
+                  {teamGoals.map((goal, index: number) => (
                     <div key={index} className="border-b border-gray-100 last:border-b-0 pb-6 last:pb-0">
                       <div className="flex justify-between items-start gap-4">
                         <h4 className="font-medium text-gray-900">{goal.title}</h4>
@@ -301,7 +423,7 @@ const ManagerDashboard: React.FC = () => {
 
               {activeAction === 'reports' && (
                 <div className="space-y-6">
-                  {reports.map((report, index) => (
+                  {reports.map((report, index: number) => (
                     <div key={index} className="border-b border-gray-100 last:border-b-0 pb-6 last:pb-0">
                       <div className="flex justify-between items-start gap-4">
                         <h4 className="font-medium text-gray-900">{report.title}</h4>
@@ -369,23 +491,29 @@ const ManagerDashboard: React.FC = () => {
                       <span className="mr-2">📂</span>Projects
                     </button>
                     <button
+                      className={`py-2 px-4 ${activeReviewTab === 'skills' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
+                      onClick={() => setActiveReviewTab('skills')}
+                    >
+                      <span className="mr-2">📊</span>Skills
+                    </button>
+                    <button
                       className={`py-2 px-4 ${activeReviewTab === 'overall' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
                       onClick={() => setActiveReviewTab('overall')}
                     >
-                      <span className="mr-2">📝</span>Overall Feedback
+                      <span className="mr-2">📝</span>Overall
                     </button>
                   </div>
 
                   {activeReviewTab === 'goals' && (
                     <div className="space-y-6">
-                      {selectedReview.goals?.map((goal, index) => (
+                      {selectedReview.goals?.map((goal, index: number) => (
                         <div key={index} className="border-b border-gray-100 pb-6 last:border-b-0">
                           <h3 className="text-lg font-semibold mb-2">🎯 {goal.title}</h3>
                           <p className="text-gray-700 mb-2"><strong>Description:</strong> {goal.description}</p>
                           <p className="text-gray-700 mb-2"><strong>Achievement:</strong> {goal.achievement}</p>
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm">Self Rating: {goal.selfRating}/5</p>
-                            <p className="text-sm">Your Rating: {goal.managerRating}/5</p>
+                            <p className="text-sm">Self Rating: {renderRatingDropdown(goal.selfRating, () => {})}</p>
+                            <p className="text-sm">Your Rating: {renderRatingDropdown(goal.managerRating || 0, () => {})}</p>
                             <div className="bg-blue-50 p-3 rounded">
                               <p className="text-sm font-medium text-gray-700">Your Feedback:</p>
                               <p className="text-sm text-gray-600">{goal.managerComments}</p>
@@ -398,19 +526,59 @@ const ManagerDashboard: React.FC = () => {
 
                   {activeReviewTab === 'projects' && (
                     <div className="space-y-6">
-                      {selectedReview.projects?.map((project, index) => (
+                      {selectedReview.projects?.map((project, index: number) => (
                         <div key={index} className="border-b border-gray-100 pb-6 last:border-b-0">
                           <h3 className="text-lg font-semibold mb-2">📂 {project.title}</h3>
                           <p className="text-gray-600 mb-2">Role: {project.role}</p>
                           <p className="text-gray-700 mb-2"><strong>Description:</strong> {project.description}</p>
                           <p className="text-gray-700 mb-2"><strong>Impact:</strong> {project.impact}</p>
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm">Self Rating: {project.selfRating}/5</p>
-                            <p className="text-sm">Your Rating: {project.managerRating}/5</p>
+                            <p className="text-sm">Self Rating: {renderRatingDropdown(project.selfRating, () => {})}</p>
+                            <p className="text-sm">Your Rating: {renderRatingDropdown(project.managerRating || 0, () => {})}</p>
                             <div className="bg-blue-50 p-3 rounded">
                               <p className="text-sm font-medium text-gray-700">Your Feedback:</p>
                               <p className="text-sm text-gray-600">{project.managerComments}</p>
                             </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {activeReviewTab === 'skills' && (
+                    <div className="space-y-6">
+                      {selectedReview.skills?.map((skillCategory: SkillCategory, index: number) => (
+                        <div key={index} className="border-b border-gray-100 pb-6 last:border-b-0">
+                          <h3 className="text-lg font-semibold mb-3">📊 {skillCategory.category}</h3>
+                          <p className="text-gray-600 mb-3">{skillCategory.description}</p>
+                          <div className="space-y-4">
+                            {skillCategory.questions.map((question: SkillQuestion, qIndex: number) => (
+                              <div key={qIndex} className="bg-gray-50 p-4 rounded">
+                                <p className="font-medium text-gray-800 mb-2">{question.question}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-1">Self Rating</p>
+                                    {renderRatingDropdown(question.selfRating, () => {})}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-1">Your Rating</p>
+                                    {renderRatingDropdown(question.managerRating || 0, () => {})}
+                                  </div>
+                                </div>
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium text-gray-700">Examples:</p>
+                                  <p className="text-sm text-gray-600">{question.examples}</p>
+                                </div>
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium text-gray-700">Areas for Improvement:</p>
+                                  <p className="text-sm text-gray-600">{question.improvementAreas}</p>
+                                </div>
+                                <div className="bg-blue-50 p-2 rounded">
+                                  <p className="text-xs font-medium text-gray-700">Your Comments:</p>
+                                  <p className="text-xs text-gray-600">{question.managerComments}</p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -440,6 +608,12 @@ const ManagerDashboard: React.FC = () => {
                       <span className="mr-2">📂</span>Projects Review
                     </button>
                     <button
+                      className={`py-2 px-4 ${activeReviewTab === 'skills' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
+                      onClick={() => setActiveReviewTab('skills')}
+                    >
+                      <span className="mr-2">📊</span>Skills Review
+                    </button>
+                    <button
                       className={`py-2 px-4 ${activeReviewTab === 'overall' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
                       onClick={() => setActiveReviewTab('overall')}
                     >
@@ -449,25 +623,74 @@ const ManagerDashboard: React.FC = () => {
 
                   {activeReviewTab === 'goals' && (
                     <div className="space-y-8">
-                      {selectedReview.goals?.map((goal, index) => (
-                        <GoalReview key={index} goal={goal} />
+                      {selectedReview.goals?.map((goal, index: number) => (
+                        <GoalReview key={index} goal={goal} renderRatingDropdown={renderRatingDropdown} />
                       ))}
                     </div>
                   )}
 
                   {activeReviewTab === 'projects' && (
                     <div className="space-y-8">
-                      {selectedReview.projects?.map((project, index) => (
-                        <ProjectReview key={index} project={project} />
+                      {selectedReview.projects?.map((project, index: number) => (
+                        <ProjectReview key={index} project={project} renderRatingDropdown={renderRatingDropdown} />
+                      ))}
+                    </div>
+                  )}
+
+                  {activeReviewTab === 'skills' && (
+                    <div className="space-y-6">
+                      {selectedReview.skills?.map((skillCategory: SkillCategory, index: number) => (
+                        <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
+                          <h3 className="text-lg font-semibold mb-4">📊 {skillCategory.category}</h3>
+                          <p className="text-gray-600 mb-4">{skillCategory.description}</p>
+                          <div className="space-y-4">
+                            {skillCategory.questions.map((question: SkillQuestion, qIndex: number) => (
+                              <div key={qIndex} className="bg-gray-50 p-4 rounded">
+                                <p className="font-medium text-gray-800 mb-3">{question.question}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <label className="block text-sm text-gray-500 mb-1">Your Rating</label>
+                                    {renderRatingDropdown(question.managerRating || 0, () => {})}
+                                  </div>
+                                </div>
+                                <div className="mb-4">
+                                  <label className="block text-sm text-gray-500 mb-1">Examples Provided</label>
+                                  <p className="text-sm text-gray-700">{question.examples}</p>
+                                </div>
+                                <div className="mb-4">
+                                  <label className="block text-sm text-gray-500 mb-1">Your Comments</label>
+                                  <textarea 
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    rows={3}
+                                    placeholder="Provide detailed feedback on this skill"
+                                    defaultValue={question.managerComments}
+                                  ></textarea>
+                                </div>
+                                <div>
+                                  <label className="block text-sm text-gray-500 mb-1">Suggested Improvements</label>
+                                  <textarea 
+                                    className="w-full p-2 border border-gray-300 rounded"
+                                    rows={2}
+                                    placeholder="Suggest areas for improvement"
+                                    defaultValue={question.improvementAreas}
+                                  ></textarea>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   )}
 
                   {activeReviewTab === 'overall' && (
-                    <OverallReview employee={{
-                      name: selectedReview.name,
-                      position: selectedReview.position
-                    }} />
+                    <OverallReview 
+                      employee={{
+                        name: selectedReview.name,
+                        position: selectedReview.position
+                      }} 
+                      renderRatingDropdown={renderRatingDropdown}
+                    />
                   )}
                 </>
               )}

@@ -8,6 +8,24 @@ import DashboardCard from '../../components/DashboardCard';
 import PieChart from '../../components/PieChart';
 import { HikeCycle, DashboardStat } from '../../types/reviewTypes';
 
+interface ReviewLevel {
+  id: number;
+  name: string;
+  deadline: string;
+  managerName: string;
+}
+
+interface AssessmentCategory {
+  id: number;
+  name: string;
+  questions: AssessmentQuestion[];
+}
+
+interface AssessmentQuestion {
+  id: number;
+  question: string;
+}
+
 const AdminDashboard: React.FC = () => {
   const [showNewHikeForm, setShowNewHikeForm] = useState(false);
   const [expandedCycle, setExpandedCycle] = useState<number | null>(null);
@@ -15,53 +33,53 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const hikeCycles: HikeCycle[] = [
-  {
-    title: "Annual Review 2024",
-    id: 1,
-    name: "Annual Review 2024",
-    status: "active",
-    type: "Annual",
-    period: "2024-01-01 to 2024-03-31",
-    dueDate: "2024-03-31",
-    participants: 45,
-    completed: 12,
-    pending: 33,
-    progress: 27,
-    manager: "Mr. Murugan",
-    milestones: [], // Added empty array
-    details: {
-      formsSubmitted: 38,
-      approved: 12,
-      clarifying: 5,
-      pendingApproval: 21,
-      averageRating: 3.8,
-      departments: ['Engineering', 'Product', 'Marketing']
+    {
+      title: "Annual Review 2024",
+      id: 1,
+      name: "Annual Review 2024",
+      status: "active",
+      type: "Annual",
+      period: "2024-01-01 to 2024-03-31",
+      dueDate: "2024-03-31",
+      participants: 45,
+      completed: 12,
+      pending: 33,
+      progress: 27,
+      manager: "Mr. Murugan",
+      milestones: [],
+      details: {
+        formsSubmitted: 38,
+        approved: 12,
+        clarifying: 5,
+        pendingApproval: 21,
+        averageRating: 3.8,
+        departments: ['Engineering', 'Product', 'Marketing']
+      }
+    },
+    {
+      title: "Quaterly Review 2025",
+      id: 2,
+      name: "Mid-term Review 2024",
+      status: "completed",
+      type: "Mid-term",
+      period: "2024-07-01 to 2024-09-30",
+      dueDate: "2024-09-30",
+      participants: 45,
+      completed: 45,
+      pending: 0,
+      progress: 100,
+      manager: "Mr. Murugan",
+      milestones: [],
+      details: {
+        formsSubmitted: 45,
+        approved: 42,
+        clarifying: 3,
+        pendingApproval: 0,
+        averageRating: 4.1,
+        departments: ['All Departments']
+      }
     }
-  },
-  {
-    title: "Quaterly Review 2025",
-    id: 2,
-    name: "Mid-term Review 2024",
-    status: "completed",
-    type: "Mid-term",
-    period: "2024-07-01 to 2024-09-30",
-    dueDate: "2024-09-30",
-    participants: 45,
-    completed: 45,
-    pending: 0,
-    progress: 100,
-    manager: "Mr. Murugan",
-    milestones: [], // Added empty array
-    details: {
-      formsSubmitted: 45,
-      approved: 42,
-      clarifying: 3,
-      pendingApproval: 0,
-      averageRating: 4.1,
-      departments: ['All Departments']
-    }
-  }
-];
+  ];
 
   const selectedCycle = hikeCycles.find(cycle => cycle.id === selectedCycleId);
 
@@ -97,13 +115,15 @@ const AdminDashboard: React.FC = () => {
 
   const selectedPieData = selectedCycle?.details ? [
     { name: 'Approved', value: selectedCycle.details.approved },
-    { name: 'Clarifying', value: selectedCycle.details.clarifying }, // Changed from rejected
+    { name: 'Clarifying', value: selectedCycle.details.clarifying },
     { name: 'Pending', value: selectedCycle.details.pendingApproval }
   ] : [];
 
   const handlePublish = (data: {
-    reviewLevels: any[];
-    customOptions: any[];
+    cycleName: string;
+    cycleDeadline: string;
+    reviewLevels: ReviewLevel[];
+    assessmentCategories: AssessmentCategory[];
     description: string;
   }) => {
     console.log('Published Hike Cycle:', data);

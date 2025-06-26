@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { EmployeeHikeCycle, SelfAssessment, SelfAssessmentGoal, SelfAssessmentProject } from '../types/reviewTypes';
+import { EmployeeHikeCycle, SelfAssessment, SelfAssessmentGoal, SelfAssessmentProject, SelfAssessmentSkill } from '../types/reviewTypes';
 
 interface SelfAssessmentFormProps {
   cycle: EmployeeHikeCycle;
@@ -7,6 +7,82 @@ interface SelfAssessmentFormProps {
   onCancel: () => void;
   managerOptions: string[];
 }
+
+// Static rating categories defined by admin/HR with additional questions for each category
+const staticRatingCategories = [
+  {
+    name: "Quality of Work",
+    description: "Accuracy, thoroughness, and effectiveness of work output",
+    questions: [
+      "How do you ensure the quality of your work?",
+      "Describe a time when you identified and fixed a quality issue in your work",
+      "What metrics or indicators do you use to measure your work quality?"
+    ]
+  },
+  {
+    name: "Productivity",
+    description: "Quantity and efficiency of work completed",
+    questions: [
+      "What techniques do you use to maintain or improve your productivity?",
+      "Describe a time when you completed a task more efficiently than expected",
+      "How do you prioritize your work to maximize productivity?"
+    ]
+  },
+  {
+    name: "Technical Skills",
+    description: "Proficiency in job-related technical skills",
+    questions: [
+      "What new technical skills have you learned this cycle? Why did you choose to learn them?",
+      "How have you applied your technical skills to solve a complex problem?",
+      "What technical skill do you plan to improve next and why?"
+    ]
+  },
+  {
+    name: "Communication",
+    description: "Effectiveness in verbal and written communication",
+    questions: [
+      "Describe a situation where your communication skills made a difference in a project",
+      "How do you adapt your communication style for different audiences?",
+      "What feedback have you received about your communication skills and how have you worked on it?"
+    ]
+  },
+  {
+    name: "Teamwork",
+    description: "Collaboration and cooperation with team members",
+    questions: [
+      "Describe your role in a successful team project",
+      "How do you handle conflicts within a team?",
+      "What do you do to foster collaboration among team members?"
+    ]
+  },
+  {
+    name: "Problem Solving",
+    description: "Ability to analyze and solve problems effectively",
+    questions: [
+      "Describe a complex problem you solved and your approach to solving it",
+      "How do you approach problems you've never encountered before?",
+      "What problem-solving frameworks or methodologies do you find most effective?"
+    ]
+  },
+  {
+    name: "Initiative",
+    description: "Proactiveness and willingness to take on responsibilities",
+    questions: [
+      "Describe a time when you took initiative beyond your regular responsibilities",
+      "How do you identify opportunities to contribute beyond your assigned tasks?",
+      "What self-driven projects or improvements have you implemented?"
+    ]
+  },
+  {
+    name: "Adaptability",
+    description: "Flexibility in handling change and new challenges",
+    questions: [
+      "Describe a significant change you adapted to and how you handled it",
+      "How do you approach learning new technologies or processes?",
+      "What strategies do you use to remain productive during times of change?"
+    ]
+  }
+];
 
 const ratingGuide = [
   { value: 1, label: "1 - Needs Improvement", description: "Performance consistently below expectations" },
@@ -41,14 +117,27 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
         rating: 0,
         manager: defaultManager,
         documents: []
-      } as SelfAssessmentProject]
+      } as SelfAssessmentProject],
+      // Initialize skills with all static rating categories and their questions
+      skills: staticRatingCategories.map(category => ({
+        category: category.name,
+        description: category.description,
+        examples: '',
+        rating: 0,
+        manager: defaultManager,
+        documents: [],
+        questionAnswers: category.questions.map(question => ({
+          question,
+          answer: ''
+        }))
+      } as SelfAssessmentSkill))
     };
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRatingGuide, setShowRatingGuide] = useState(false);
-  const [activeRatingField, setActiveRatingField] = useState<{type: 'goal' | 'project', index: number} | null>(null);
+  const [activeRatingField, setActiveRatingField] = useState<{type: 'goal' | 'project' | 'skill', index: number} | null>(null);
   const fileInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
 
   const validateForm = () => {
@@ -93,6 +182,27 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
       }
     });
 
+    assessment.skills.forEach((skill, index) => {
+      if (!skill.category.trim()) {
+        errors[`skill-${index}-category`] = 'Category is required';
+      }
+      if (!skill.description.trim()) {
+        errors[`skill-${index}-description`] = 'Description is required';
+      }
+      if (skill.rating < 1 || skill.rating > 5) {
+        errors[`skill-${index}-rating`] = 'Valid rating (1-5) is required';
+      }
+      if (!skill.manager) {
+        errors[`skill-${index}-manager`] = 'Manager is required';
+      }
+      // Validate question answers
+      skill.questionAnswers.forEach((qa, qIndex) => {
+        if (!qa.answer.trim()) {
+          errors[`skill-${index}-question-${qIndex}`] = 'Answer is required';
+        }
+      });
+    });
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -121,18 +231,44 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
     }
   };
 
-  const handleRatingChange = (type: 'goal' | 'project', index: number, value: number) => {
+  const handleSkillChange = (index: number, field: keyof SelfAssessmentSkill, value: any) => {
+    const updatedSkills = [...assessment.skills];
+    updatedSkills[index] = { ...updatedSkills[index], [field]: value };
+    setAssessment({ ...assessment, skills: updatedSkills });
+    
+    if (formErrors[`skill-${index}-${field}`]) {
+      const newErrors = { ...formErrors };
+      delete newErrors[`skill-${index}-${field}`];
+      setFormErrors(newErrors);
+    }
+  };
+
+  const handleQuestionAnswerChange = (skillIndex: number, questionIndex: number, answer: string) => {
+    const updatedSkills = [...assessment.skills];
+    updatedSkills[skillIndex].questionAnswers[questionIndex].answer = answer;
+    setAssessment({ ...assessment, skills: updatedSkills });
+    
+    if (formErrors[`skill-${skillIndex}-question-${questionIndex}`]) {
+      const newErrors = { ...formErrors };
+      delete newErrors[`skill-${skillIndex}-question-${questionIndex}`];
+      setFormErrors(newErrors);
+    }
+  };
+
+  const handleRatingChange = (type: 'goal' | 'project' | 'skill', index: number, value: number) => {
     if (value < 0) value = 0;
     if (value > 5) value = 5;
     
     if (type === 'goal') {
       handleGoalChange(index, 'rating', value);
-    } else {
+    } else if (type === 'project') {
       handleProjectChange(index, 'rating', value);
+    } else {
+      handleSkillChange(index, 'rating', value);
     }
   };
 
-  const toggleRatingGuide = (type: 'goal' | 'project', index: number) => {
+  const toggleRatingGuide = (type: 'goal' | 'project' | 'skill', index: number) => {
     setActiveRatingField({ type, index });
     setShowRatingGuide(!showRatingGuide || 
       (activeRatingField?.type !== type || activeRatingField?.index !== index));
@@ -146,7 +282,7 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
   };
 
   const handleDocumentUpload = (
-    type: 'goal' | 'project',
+    type: 'goal' | 'project' | 'skill',
     index: number,
     files: FileList | null
   ) => {
@@ -159,16 +295,21 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
         ...assessment.goals[index].documents,
         ...fileArray
       ]);
-    } else {
+    } else if (type === 'project') {
       handleProjectChange(index, 'documents', [
         ...assessment.projects[index].documents,
+        ...fileArray
+      ]);
+    } else {
+      handleSkillChange(index, 'documents', [
+        ...assessment.skills[index].documents,
         ...fileArray
       ]);
     }
   };
 
   const removeDocument = (
-    type: 'goal' | 'project',
+    type: 'goal' | 'project' | 'skill',
     index: number,
     docIndex: number
   ) => {
@@ -176,14 +317,18 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
       const updatedDocs = [...assessment.goals[index].documents];
       updatedDocs.splice(docIndex, 1);
       handleGoalChange(index, 'documents', updatedDocs);
-    } else {
+    } else if (type === 'project') {
       const updatedDocs = [...assessment.projects[index].documents];
       updatedDocs.splice(docIndex, 1);
       handleProjectChange(index, 'documents', updatedDocs);
+    } else {
+      const updatedDocs = [...assessment.skills[index].documents];
+      updatedDocs.splice(docIndex, 1);
+      handleSkillChange(index, 'documents', updatedDocs);
     }
   };
 
-  const triggerFileInput = (type: 'goal' | 'project', index: number) => {
+  const triggerFileInput = (type: 'goal' | 'project' | 'skill', index: number) => {
     const key = `${type}-${index}`;
     if (fileInputRefs.current[key]) {
       fileInputRefs.current[key]?.click();
@@ -279,7 +424,7 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
     return formErrors[`${fieldPrefix}-${index}-${field}`] || null;
   };
 
-  const renderDocumentSection = (type: 'goal' | 'project', index: number, documents: File[]) => (
+  const renderDocumentSection = (type: 'goal' | 'project' | 'skill', index: number, documents: File[]) => (
     <div className="mt-4">
       <label className="block text-sm text-gray-600 mb-2">Supporting Documents</label>
       <div className="space-y-2">
@@ -321,7 +466,7 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
     </div>
   );
 
-  const renderRatingInput = (type: 'goal' | 'project', index: number, currentRating: number) => (
+  const renderRatingInput = (type: 'goal' | 'project' | 'skill', index: number, currentRating: number) => (
     <div className="relative">
       <div className="flex items-center">
         <input
@@ -368,6 +513,29 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
       )}
     </div>
   );
+
+  const renderSkillQuestions = (skillIndex: number, questions: {question: string, answer: string}[]) => {
+    return (
+      <div className="mt-4 space-y-4">
+        <h6 className="font-medium text-sm">Category-Specific Questions:</h6>
+        {questions.map((qa, qIndex) => (
+          <div key={qIndex} className="mb-3">
+            <label className="block text-sm text-gray-600 mb-1">{qa.question}*</label>
+            <textarea
+              className={`w-full p-2 border rounded ${getError('skill', skillIndex, `question-${qIndex}`) ? 'border-red-500' : ''}`}
+              rows={3}
+              value={qa.answer}
+              onChange={(e) => handleQuestionAnswerChange(skillIndex, qIndex, e.target.value)}
+              required
+            />
+            {getError('skill', skillIndex, `question-${qIndex}`) && (
+              <p className="text-red-500 text-xs mt-1">{getError('skill', skillIndex, `question-${qIndex}`)}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6 mt-4">
@@ -578,6 +746,45 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
 
               {/* Document Upload for Project */}
               {renderDocumentSection('project', index, project.documents)}
+            </div>
+          ))}
+        </div>
+
+        {/* Skills Section - Now with static categories and questions */}
+        <div className="mb-8">
+          <h4 className="text-lg font-medium mb-4">Skills & Competencies</h4>
+          <div className="text-sm text-gray-600 mb-4">
+            Please rate yourself on each of the following predefined skill categories and answer the related questions:
+          </div>
+          
+          {assessment.skills.map((skill, index) => (
+            <div key={index} className="mb-6 p-4 border rounded-lg">
+              <h5 className="font-medium mb-2">{skill.category}</h5>
+              <div className="text-sm text-gray-600 mb-3">{skill.description}</div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Rating (1-5)*</label>
+                  {renderRatingInput('skill', index, skill.rating)}
+                </div>
+              </div>
+              
+              <div className="mb-3">
+                <label className="block text-sm text-gray-600 mb-1">Examples of Application</label>
+                <textarea
+                  className={`w-full p-2 border rounded ${getError('skill', index, 'examples') ? 'border-red-500' : ''}`}
+                  rows={3}
+                  value={skill.examples}
+                  onChange={(e) => handleSkillChange(index, 'examples', e.target.value)}
+                  placeholder="Provide specific examples of how you demonstrated this skill"
+                />
+                {getError('skill', index, 'examples') && (
+                  <p className="text-red-500 text-xs mt-1">{getError('skill', index, 'examples')}</p>
+                )}
+              </div>
+
+              {/* Category-specific questions */}
+              {renderSkillQuestions(index, skill.questionAnswers)}
             </div>
           ))}
         </div>

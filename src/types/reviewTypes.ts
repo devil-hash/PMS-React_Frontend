@@ -28,7 +28,20 @@ export interface CompensationReportEntry {
   hikePercent: number;
   newSalary: number;
 }
+export interface SkillQuestion {
+  question: string;
+  selfRating: number;
+  managerRating: number;
+  managerComments: string;
+  examples: string; // ✅ Required
+  improvementAreas: string; // ✅ Required
+}
 
+export interface SkillCategory {
+  category: string;
+  description: string; // ✅ Add this if you use it
+  questions: SkillQuestion[];
+}
 /* Review Core Types */
 export interface Review {
   id: number;
@@ -43,8 +56,8 @@ export interface Review {
   feedback?: string;
   completedDate?: string;
   overallFeedback?: string;
+  skills?: SkillCategory[]; // ✅ ADD THIS
 }
-
 export interface Goal {
   title: string;
   selfRating: number;
@@ -89,7 +102,20 @@ export interface SelfAssessmentProject {
 export interface SelfAssessment {
   goals: SelfAssessmentGoal[];
   projects: SelfAssessmentProject[];
+  skills: SelfAssessmentSkill[];
   submittedDate?: string;
+}
+export interface SelfAssessmentSkill {
+  category: string;
+  description: string;
+  examples: string;
+  rating: number;
+  manager: string;
+  documents: File[];
+  questionAnswers: {
+    question: string;
+    answer: string;
+  }[];
 }
 
 /* Milestone & Approval Types */
@@ -191,6 +217,16 @@ export interface FeedbackItem {
   from: string;
   content: string;
   date: string;
+}
+// Example definition — adjust as per your actual structure
+export interface ReviewLevel {
+  levelName: string;
+  approverRole: string;
+}
+
+export interface AssessmentCategory {
+  name: string;
+  questions: string[];
 }
 
 export interface DashboardStat {

@@ -7,15 +7,38 @@ interface OverallReviewProps {
     position: string;
   };
   documents?: ReviewDocument[];
+  renderRatingDropdown: (value: number, onChange: (value: number) => void) => React.ReactNode;
+  initialRating?: number;
+  initialFeedback?: string;
+  onRatingChange?: (rating: number) => void;
+  onFeedbackChange?: (feedback: string) => void;
 }
 
-const OverallReview: React.FC<OverallReviewProps> = ({ employee, documents }) => {
-  const [overallRating, setOverallRating] = React.useState<number | null>(null);
-  const [feedback, setFeedback] = React.useState('');
+const OverallReview: React.FC<OverallReviewProps> = ({
+  employee,
+  documents,
+  renderRatingDropdown,
+  initialRating = null,
+  initialFeedback = '',
+  onRatingChange,
+  onFeedbackChange
+}) => {
+  const [overallRating, setOverallRating] = React.useState<number | null>(initialRating);
+  const [feedback, setFeedback] = React.useState(initialFeedback);
 
-  const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setOverallRating(isNaN(value) ? null : Math.min(Math.max(value, 1), 5));
+  const handleRatingChange = (value: number) => {
+    setOverallRating(value);
+    if (onRatingChange) {
+      onRatingChange(value);
+    }
+  };
+
+  const handleFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setFeedback(value);
+    if (onFeedbackChange) {
+      onFeedbackChange(value);
+    }
   };
 
   return (
@@ -62,36 +85,12 @@ const OverallReview: React.FC<OverallReviewProps> = ({ employee, documents }) =>
         <h2 className="text-xl font-semibold mb-2">Overall Rating</h2>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="1"
-              max="5"
-              step="0.1"
-              value={overallRating || ''}
-              onChange={handleRatingChange}
-              className="border border-gray-300 rounded p-2 w-24"
-              placeholder="1.0 - 5.0"
-            />
+            {renderRatingDropdown(overallRating || 0, handleRatingChange)}
             <span className="text-gray-600 whitespace-nowrap">
               {overallRating ? `${overallRating}/5` : 'Not rated'}
             </span>
           </div>
           
-          {/* Updated Rating Guide with increased width */}
-          <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs w-full sm:w-auto">
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              <span className="font-medium whitespace-nowrap">5.0</span>
-              <span className="whitespace-nowrap">Outstanding</span>
-              <span className="font-medium whitespace-nowrap">4.0-4.9</span>
-              <span className="whitespace-nowrap">Excellent</span>
-              <span className="font-medium whitespace-nowrap">3.0-3.9</span>
-              <span className="whitespace-nowrap">Good</span>
-              <span className="font-medium whitespace-nowrap">2.0-2.9</span>
-              <span className="whitespace-nowrap">Needs Improvement</span>
-              <span className="font-medium whitespace-nowrap">1.0-1.9</span>
-              <span className="whitespace-nowrap">Poor</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -101,7 +100,7 @@ const OverallReview: React.FC<OverallReviewProps> = ({ employee, documents }) =>
           className="w-full border border-gray-300 rounded p-2 h-32"
           placeholder="Provide comprehensive feedback on the employee's overall performance..."
           value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
+          onChange={handleFeedbackChange}
         />
       </div>
 

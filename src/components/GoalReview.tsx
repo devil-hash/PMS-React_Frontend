@@ -3,15 +3,15 @@ import { Goal } from '../types/reviewTypes';
 
 interface GoalReviewProps {
   goal: Goal;
+  renderRatingDropdown: (value: number, onChange: (value: number) => void) => React.ReactNode;
 }
 
-const GoalReview: React.FC<GoalReviewProps> = ({ goal }) => {
-  const [managerRating, setManagerRating] = React.useState<number | null>(null);
-  const [comments, setComments] = React.useState('');
+const GoalReview: React.FC<GoalReviewProps> = ({ goal, renderRatingDropdown }) => {
+  const [managerRating, setManagerRating] = React.useState<number | null>(goal.managerRating || null);
+  const [comments, setComments] = React.useState(goal.managerComments || '');
 
-  const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setManagerRating(isNaN(value) ? null : Math.min(Math.max(value, 1), 5));
+  const handleRatingChange = (value: number) => {
+    setManagerRating(value);
   };
 
   return (
@@ -67,36 +67,13 @@ const GoalReview: React.FC<GoalReviewProps> = ({ goal }) => {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Manager Rating</h2>
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <input
-              type="number"
-              min="1"
-              max="5"
-              step="0.1"
-              value={managerRating || ''}
-              onChange={handleRatingChange}
-              className="border border-gray-300 rounded p-2 w-20"
-              placeholder="1.0-5.0"
-            />
-            <span className="text-gray-600 whitespace-nowrap text-sm">
+          <div className="flex items-center gap-2">
+            {renderRatingDropdown(managerRating || 0, handleRatingChange)}
+            <span className="text-gray-600 whitespace-nowrap">
               {managerRating ? `${managerRating}/5` : 'Not rated'}
             </span>
           </div>
           
-          <div className="bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs w-full sm:w-auto">
-            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-              <span className="font-medium whitespace-nowrap">5.0</span>
-              <span className="whitespace-nowrap">Outstanding</span>
-              <span className="font-medium whitespace-nowrap">4.0-4.9</span>
-              <span className="whitespace-nowrap">Excellent</span>
-              <span className="font-medium whitespace-nowrap">3.0-3.9</span>
-              <span className="whitespace-nowrap">Good</span>
-              <span className="font-medium whitespace-nowrap">2.0-2.9</span>
-              <span className="whitespace-nowrap">Needs Improvement</span>
-              <span className="font-medium whitespace-nowrap">1.0-1.9</span>
-              <span className="whitespace-nowrap">Poor</span>
-            </div>
-          </div>
         </div>
       </div>
 

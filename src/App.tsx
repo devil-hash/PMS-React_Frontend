@@ -20,8 +20,6 @@ const App: React.FC = () => {
           
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/employees" element={<AdminDashboard />} />
-            <Route path="/admin/projects" element={<AdminDashboard />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['manager']} />}>
