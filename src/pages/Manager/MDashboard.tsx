@@ -10,13 +10,19 @@ import GoalReview from '../../components/GoalReview';
 import OverallReview from '../../components/OverallReview';
 import { Review, SkillCategory, SkillQuestion } from '../../types/reviewTypes';
 
+interface RatingDropdownProps {
+  value: number;
+  onChange: (value: number) => void;
+}
+
 const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeAction, setActiveAction] = useState<'newReview' | 'teamGoals' | 'reports' | null>(null);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [activeReviewTab, setActiveReviewTab] = useState<'goals' | 'projects' | 'overall' | 'skills'>('goals');
   const [isViewingCompletedReview, setIsViewingCompletedReview] = useState(false);
-  
+  const [overallFeedback, setOverallFeedback] = useState('');
+
   const stats = [
     { title: 'Team Members', value: 8, icon: '👥' },
     { title: 'Pending Reviews', value: 5, icon: '⏳' },
@@ -24,7 +30,7 @@ const ManagerDashboard: React.FC = () => {
     { title: 'Average Team Rating', value: 4.1, icon: '⭐' },
   ];
 
-  const pendingReviews: Review[] = [
+  const [pendingReviews, setPendingReviews] = useState<Review[]>([
     { 
       id: 1, 
       name: 'John Doe', 
@@ -33,6 +39,7 @@ const ManagerDashboard: React.FC = () => {
       deadline: '2023-06-25',
       goals: [
         {
+          id:1,
           title: 'Improve React Performance',
           selfRating: 4,
           description: 'Optimize existing React components to improve application performance by 20%',
@@ -43,6 +50,7 @@ const ManagerDashboard: React.FC = () => {
       ],
       projects: [
         {
+          id:1,
           title: 'Customer Dashboard Redesign',
           role: 'Lead Frontend Developer',
           selfRating: 4,
@@ -58,20 +66,22 @@ const ManagerDashboard: React.FC = () => {
           description: 'Evaluation of core technical competencies',
           questions: [
             {
+              id:1,
               question: 'Demonstrates strong proficiency in React and TypeScript',
               selfRating: 4,
               managerRating: 4.5,
               managerComments: 'John has excellent technical skills and is a go-to resource for complex React issues',
-              examples: 'Implemented complex state management solution',
-              improvementAreas: 'Could explore more advanced TypeScript patterns'
+              examples: ['Implemented complex state management solution'],
+              improvementAreas: ['Could explore more advanced TypeScript patterns']
             },
             {
+              id:2,
               question: 'Ability to debug and solve complex problems',
               selfRating: 4,
               managerRating: 4,
               managerComments: 'Consistently solves difficult technical challenges',
-              examples: 'Resolved critical production issue within 2 hours',
-              improvementAreas: 'Document solutions more thoroughly'
+              examples: ['Resolved critical production issue within 2 hours'],
+              improvementAreas: ['Document solutions more thoroughly']
             }
           ]
         },
@@ -80,12 +90,13 @@ const ManagerDashboard: React.FC = () => {
           description: 'Effectiveness in team communication',
           questions: [
             {
+              id:3,
               question: 'Clearly communicates technical concepts to team members',
               selfRating: 3,
               managerRating: 3.5,
               managerComments: 'Could improve documentation of complex solutions',
-              examples: 'Led knowledge sharing session on new framework',
-              improvementAreas: 'More detailed technical documentation'
+              examples: ['Led knowledge sharing session on new framework'],
+              improvementAreas: ['More detailed technical documentation']
             }
           ]
         }
@@ -99,6 +110,7 @@ const ManagerDashboard: React.FC = () => {
       deadline: '2023-06-26',
       goals: [
         {
+          id:1,
           title: 'Improve Design System',
           selfRating: 3,
           description: 'Update design system components for better consistency',
@@ -109,6 +121,7 @@ const ManagerDashboard: React.FC = () => {
       ],
       projects: [
         {
+          id:1,
           title: 'Mobile App Redesign',
           role: 'Lead Designer',
           selfRating: 4,
@@ -124,12 +137,13 @@ const ManagerDashboard: React.FC = () => {
           description: 'Core design skills and user experience',
           questions: [
             {
+              id:1,
               question: 'Creates intuitive and user-friendly interfaces',
               selfRating: 4,
               managerRating: 4.5,
               managerComments: 'Jane has an excellent eye for design and usability',
-              examples: 'Redesigned checkout flow increased conversion by 15%',
-              improvementAreas: 'More A/B testing of design variations'
+              examples: ['Redesigned checkout flow increased conversion by 15%'],
+              improvementAreas: ['More A/B testing of design variations']
             }
           ]
         },
@@ -138,20 +152,21 @@ const ManagerDashboard: React.FC = () => {
           description: 'Working with cross-functional teams',
           questions: [
             {
+              id:1,
               question: 'Works effectively with developers to implement designs',
               selfRating: 3,
               managerRating: 3,
               managerComments: 'Could provide more detailed design specifications',
-              examples: 'Improved handoff process with dev team',
-              improvementAreas: 'More detailed design system documentation'
+              examples: ['Improved handoff process with dev team'],
+              improvementAreas: ['More detailed design system documentation']
             }
           ]
         }
       ]
     },
-  ];
+  ]);
 
-  const completedReviews: Review[] = [
+  const [completedReviews, setCompletedReviews] = useState<Review[]>([
     { 
       id: 4, 
       name: 'Sarah Williams', 
@@ -161,6 +176,7 @@ const ManagerDashboard: React.FC = () => {
       deadline: '2023-05-15',
       goals: [
         {
+          id:1,
           title: 'Product Roadmap Completion',
           selfRating: 4,
           description: 'Deliver complete product roadmap for Q2',
@@ -171,6 +187,7 @@ const ManagerDashboard: React.FC = () => {
       ],
       projects: [
         {
+          id:1,
           title: 'Feature Launch',
           role: 'Product Lead',
           selfRating: 5,
@@ -186,12 +203,13 @@ const ManagerDashboard: React.FC = () => {
           description: 'Core product management competencies',
           questions: [
             {
+              id :2,
               question: 'Effectively prioritizes product features',
               selfRating: 4,
               managerRating: 4.5,
               managerComments: 'Excellent prioritization skills based on business value',
-              examples: 'Implemented new prioritization framework',
-              improvementAreas: 'More data-driven prioritization'
+              examples: ['Implemented new prioritization framework'],
+              improvementAreas: ['More data-driven prioritization']
             }
           ]
         },
@@ -200,12 +218,13 @@ const ManagerDashboard: React.FC = () => {
           description: 'Team leadership and guidance',
           questions: [
             {
+              id:3,
               question: 'Motivates and guides the product team',
               selfRating: 4,
               managerRating: 4,
               managerComments: 'Strong leadership skills demonstrated',
-              examples: 'Led team through challenging product pivot',
-              improvementAreas: 'More frequent 1:1s with team members'
+              examples: ['Led team through challenging product pivot'],
+              improvementAreas: ['More frequent 1:1s with team members']
             }
           ]
         }
@@ -221,6 +240,7 @@ const ManagerDashboard: React.FC = () => {
       deadline: '2023-05-20',
       goals: [
         {
+          id:1,
           title: 'CI/CD Pipeline Improvement',
           selfRating: 3,
           description: 'Reduce deployment times by 30%',
@@ -231,6 +251,7 @@ const ManagerDashboard: React.FC = () => {
       ],
       projects: [
         {
+          id:2,
           title: 'Infrastructure Upgrade',
           role: 'Lead DevOps',
           selfRating: 4,
@@ -246,12 +267,13 @@ const ManagerDashboard: React.FC = () => {
           description: 'DevOps technical expertise',
           questions: [
             {
+              id:2,
               question: 'Maintains and improves deployment infrastructure',
               selfRating: 4,
               managerRating: 4,
               managerComments: 'Solid technical skills in DevOps area',
-              examples: 'Implemented automated rollback system',
-              improvementAreas: 'More documentation of infrastructure changes'
+              examples: ['Implemented automated rollback system'],
+              improvementAreas: ['More documentation of infrastructure changes']
             }
           ]
         },
@@ -260,19 +282,20 @@ const ManagerDashboard: React.FC = () => {
           description: 'Technical communication skills',
           questions: [
             {
+              id:2,
               question: 'Documents processes and changes clearly',
               selfRating: 3,
               managerRating: 3,
               managerComments: 'Could improve documentation of infrastructure changes',
-              examples: 'Created new onboarding docs for DevOps',
-              improvementAreas: 'More detailed change logs'
+              examples: ['Created new onboarding docs for DevOps'],
+              improvementAreas: ['More detailed change logs']
             }
           ]
         }
       ],
       overallFeedback: 'David made good progress on his goals but could benefit from more proactive communication about challenges faced.'
     },
-  ];
+  ]);
 
   const teamGoals = [
     { title: 'Improve Code Quality', progress: 65, target: 'Reduce bugs by 25%' },
@@ -306,9 +329,114 @@ const ManagerDashboard: React.FC = () => {
     setSelectedReview(review);
     setIsViewingCompletedReview(isCompleted);
     setActiveReviewTab('goals');
+    setOverallFeedback(review.overallFeedback || '');
   };
 
-  const renderRatingDropdown = (value: number, onChange: (value: number) => void) => (
+  const handleSkillRatingChange = (reviewId: number, categoryIndex: number, questionIndex: number, value: number) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        const updatedSkills = [...review.skills || []];
+        const updatedCategory = {...updatedSkills[categoryIndex]};
+        const updatedQuestions = [...updatedCategory.questions];
+        updatedQuestions[questionIndex] = {
+          ...updatedQuestions[questionIndex],
+          managerRating: value
+        };
+        
+        updatedCategory.questions = updatedQuestions;
+        updatedSkills[categoryIndex] = updatedCategory;
+        
+        return {
+          ...review,
+          skills: updatedSkills
+        };
+      }
+      return review;
+    });
+    
+    setPendingReviews(updatedReviews);
+    
+    if (selectedReview && selectedReview.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const handleSkillCommentsChange = (reviewId: number, categoryIndex: number, questionIndex: number, comments: string) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        const updatedSkills = [...review.skills || []];
+        const updatedCategory = {...updatedSkills[categoryIndex]};
+        const updatedQuestions = [...updatedCategory.questions];
+        updatedQuestions[questionIndex] = {
+          ...updatedQuestions[questionIndex],
+          managerComments: comments
+        };
+        
+        updatedCategory.questions = updatedQuestions;
+        updatedSkills[categoryIndex] = updatedCategory;
+        
+        return {
+          ...review,
+          skills: updatedSkills
+        };
+      }
+      return review;
+    });
+    
+    setPendingReviews(updatedReviews);
+    
+    if (selectedReview && selectedReview.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const handleSkillImprovementChange = (
+    reviewId: number, 
+    categoryIndex: number, 
+    questionIndex: number, 
+    improvement: string
+  ) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        const updatedSkills = [...review.skills || []];
+        const updatedCategory = {...updatedSkills[categoryIndex]};
+        const updatedQuestions = [...updatedCategory.questions];
+        
+        const improvementsArray = improvement.split('\n').filter(line => line.trim() !== '');
+        
+        updatedQuestions[questionIndex] = {
+          ...updatedQuestions[questionIndex],
+          improvementAreas: improvementsArray
+        };
+        
+        updatedCategory.questions = updatedQuestions;
+        updatedSkills[categoryIndex] = updatedCategory;
+        
+        return {
+          ...review,
+          skills: updatedSkills
+        };
+      }
+      return review;
+    });
+    
+    setPendingReviews(updatedReviews);
+    
+    if (selectedReview && selectedReview.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const renderRatingDropdown = ({ value, onChange }: RatingDropdownProps) => (
     <select 
       className="border border-gray-300 rounded p-2"
       value={value}
@@ -512,8 +640,8 @@ const ManagerDashboard: React.FC = () => {
                           <p className="text-gray-700 mb-2"><strong>Description:</strong> {goal.description}</p>
                           <p className="text-gray-700 mb-2"><strong>Achievement:</strong> {goal.achievement}</p>
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm">Self Rating: {renderRatingDropdown(goal.selfRating, () => {})}</p>
-                            <p className="text-sm">Your Rating: {renderRatingDropdown(goal.managerRating || 0, () => {})}</p>
+                            <p className="text-sm">Self Rating: {renderRatingDropdown({ value: goal.selfRating, onChange: () => {} })}</p>
+                            <p className="text-sm">Your Rating: {renderRatingDropdown({ value: goal.managerRating || 0, onChange: () => {} })}</p>
                             <div className="bg-blue-50 p-3 rounded">
                               <p className="text-sm font-medium text-gray-700">Your Feedback:</p>
                               <p className="text-sm text-gray-600">{goal.managerComments}</p>
@@ -533,8 +661,8 @@ const ManagerDashboard: React.FC = () => {
                           <p className="text-gray-700 mb-2"><strong>Description:</strong> {project.description}</p>
                           <p className="text-gray-700 mb-2"><strong>Impact:</strong> {project.impact}</p>
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm">Self Rating: {renderRatingDropdown(project.selfRating, () => {})}</p>
-                            <p className="text-sm">Your Rating: {renderRatingDropdown(project.managerRating || 0, () => {})}</p>
+                            <p className="text-sm">Self Rating: {renderRatingDropdown({ value: project.selfRating, onChange: () => {} })}</p>
+                            <p className="text-sm">Your Rating: {renderRatingDropdown({ value: project.managerRating || 0, onChange: () => {} })}</p>
                             <div className="bg-blue-50 p-3 rounded">
                               <p className="text-sm font-medium text-gray-700">Your Feedback:</p>
                               <p className="text-sm text-gray-600">{project.managerComments}</p>
@@ -558,11 +686,11 @@ const ManagerDashboard: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                                   <div>
                                     <p className="text-sm font-medium text-gray-700 mb-1">Self Rating</p>
-                                    {renderRatingDropdown(question.selfRating, () => {})}
+                                    {renderRatingDropdown({ value: question.selfRating, onChange: () => {} })}
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium text-gray-700 mb-1">Your Rating</p>
-                                    {renderRatingDropdown(question.managerRating || 0, () => {})}
+                                    {renderRatingDropdown({ value: question.managerRating || 0, onChange: () => {} })}
                                   </div>
                                 </div>
                                 <div className="mb-3">
@@ -624,7 +752,12 @@ const ManagerDashboard: React.FC = () => {
                   {activeReviewTab === 'goals' && (
                     <div className="space-y-8">
                       {selectedReview.goals?.map((goal, index: number) => (
-                        <GoalReview key={index} goal={goal} renderRatingDropdown={renderRatingDropdown} />
+                        <GoalReview 
+                          key={index} 
+                          goal={goal} 
+                          renderRatingDropdown={renderRatingDropdown}
+                          isViewOnly={false}
+                        />
                       ))}
                     </div>
                   )}
@@ -632,25 +765,45 @@ const ManagerDashboard: React.FC = () => {
                   {activeReviewTab === 'projects' && (
                     <div className="space-y-8">
                       {selectedReview.projects?.map((project, index: number) => (
-                        <ProjectReview key={index} project={project} renderRatingDropdown={renderRatingDropdown} />
+                        <ProjectReview 
+                          key={index} 
+                          project={project} 
+                          renderRatingDropdown={renderRatingDropdown}
+                          isViewOnly={false}
+                        />
                       ))}
                     </div>
                   )}
 
-                  {activeReviewTab === 'skills' && (
+                  {activeReviewTab === 'skills' && selectedReview && (
                     <div className="space-y-6">
-                      {selectedReview.skills?.map((skillCategory: SkillCategory, index: number) => (
-                        <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
+                      {selectedReview.skills?.map((skillCategory: SkillCategory, categoryIndex: number) => (
+                        <div key={categoryIndex} className="border-b border-gray-200 pb-6 last:border-b-0">
                           <h3 className="text-lg font-semibold mb-4">📊 {skillCategory.category}</h3>
                           <p className="text-gray-600 mb-4">{skillCategory.description}</p>
                           <div className="space-y-4">
-                            {skillCategory.questions.map((question: SkillQuestion, qIndex: number) => (
-                              <div key={qIndex} className="bg-gray-50 p-4 rounded">
+                            {skillCategory.questions.map((question: SkillQuestion, questionIndex: number) => (
+                              <div key={questionIndex} className="bg-gray-50 p-4 rounded">
                                 <p className="font-medium text-gray-800 mb-3">{question.question}</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                   <div>
+                                    <label className="block text-sm text-gray-500 mb-1">Employee Self Rating</label>
+                                    {renderRatingDropdown({
+                                      value: question.selfRating,
+                                      onChange: () => {}
+                                    })}
+                                  </div>
+                                  <div>
                                     <label className="block text-sm text-gray-500 mb-1">Your Rating</label>
-                                    {renderRatingDropdown(question.managerRating || 0, () => {})}
+                                    {renderRatingDropdown({
+                                      value: question.managerRating || 0,
+                                      onChange: (value) => handleSkillRatingChange(
+                                        selectedReview.id,
+                                        categoryIndex,
+                                        questionIndex,
+                                        value
+                                      )
+                                    })}
                                   </div>
                                 </div>
                                 <div className="mb-4">
@@ -663,7 +816,13 @@ const ManagerDashboard: React.FC = () => {
                                     className="w-full p-2 border border-gray-300 rounded"
                                     rows={3}
                                     placeholder="Provide detailed feedback on this skill"
-                                    defaultValue={question.managerComments}
+                                    value={question.managerComments || ''}
+                                    onChange={(e) => handleSkillCommentsChange(
+                                      selectedReview.id,
+                                      categoryIndex,
+                                      questionIndex,
+                                      e.target.value
+                                    )}
                                   ></textarea>
                                 </div>
                                 <div>
@@ -672,7 +831,13 @@ const ManagerDashboard: React.FC = () => {
                                     className="w-full p-2 border border-gray-300 rounded"
                                     rows={2}
                                     placeholder="Suggest areas for improvement"
-                                    defaultValue={question.improvementAreas}
+                                    value={question.improvementAreas || ''}
+                                    onChange={(e) => handleSkillImprovementChange(
+                                      selectedReview.id,
+                                      categoryIndex,
+                                      questionIndex,
+                                      e.target.value
+                                    )}
                                   ></textarea>
                                 </div>
                               </div>
@@ -690,6 +855,9 @@ const ManagerDashboard: React.FC = () => {
                         position: selectedReview.position
                       }} 
                       renderRatingDropdown={renderRatingDropdown}
+                      overallFeedback={overallFeedback}
+                      onFeedbackChange={(value) => setOverallFeedback(value)}
+                      isViewOnly={false}
                     />
                   )}
                 </>

@@ -9,7 +9,13 @@ export interface ReviewDocument {
   size: number;
   uploadedAt: string;
 }
-
+// types/reviewTypes.ts
+export interface RatingDropdownProps {
+  value: number;
+  onChange: (value: number) => void;
+  error?: string;
+  isRequired?: boolean;
+}
 /* Template Types */
 export interface Template {
   id: number;
@@ -19,29 +25,22 @@ export interface Template {
   fields: string[];
 }
 
-/* Compensation Types */
-export interface CompensationReportEntry {
-  employeeId: number;
-  employeeName: string;
-  department: string;
-  previousSalary: number;
-  hikePercent: number;
-  newSalary: number;
-}
 export interface SkillQuestion {
+  id: number;
   question: string;
   selfRating: number;
   managerRating: number;
   managerComments: string;
-  examples: string; // ✅ Required
-  improvementAreas: string; // ✅ Required
+  examples?: string[];
+  improvementAreas?: string[];
 }
 
 export interface SkillCategory {
   category: string;
-  description: string; // ✅ Add this if you use it
+  description?: string;
   questions: SkillQuestion[];
 }
+
 /* Review Core Types */
 export interface Review {
   id: number;
@@ -56,9 +55,11 @@ export interface Review {
   feedback?: string;
   completedDate?: string;
   overallFeedback?: string;
-  skills?: SkillCategory[]; // ✅ ADD THIS
+  skills?: SkillCategory[];
 }
+
 export interface Goal {
+  id:number
   title: string;
   selfRating: number;
   managerRating?: number;
@@ -69,6 +70,7 @@ export interface Goal {
 }
 
 export interface Project {
+  id:number,
   title: string;
   role: string;
   selfRating: number;
@@ -124,9 +126,8 @@ export interface Milestone {
   title: string;
   description: string;
   dueDate: string;
-  status: 'not-started' | 'in-progress' | 'completed';
+  status: 'completed' | 'in-progress' | 'pending';
   rating?: number;
-  feedback?: string;
 }
 
 // types/reviewTypes.ts
@@ -153,7 +154,17 @@ export type Approval = {
     comments: string;
   }[];
 };
-
+export interface FormApproval {
+  id: number;
+  title: string;
+  type: string;
+  description: string;
+  createdBy: string;
+  createdDate: string;
+  status: 'pending' | 'approved' | 'rejected';
+  formData: any;
+  comments?: string;
+}
 /* Hike Cycle Types */
 export interface HikeCycleDetails {
   formsSubmitted: number;
@@ -161,11 +172,15 @@ export interface HikeCycleDetails {
   clarifying: number;
   pendingApproval: number;
   averageRating: number;
+  averageHike?: string;
+  hikeRange?: string;
+  highestHike?: string;
+  lowestHike?: string;
   departments: string[];
 }
 
 export interface HikeCycle {
-  title:string;
+  title: string;
   id: number;
   name: string;
   status: 'pending' | 'active' | 'completed';
@@ -175,7 +190,6 @@ export interface HikeCycle {
   participants: number;
   completed: number;
   pending: number;
-  progress: number;
   manager?: string;
   details?: HikeCycleDetails;
   selfAssessment?: SelfAssessment;
@@ -273,3 +287,4 @@ export interface HikeForm {
 }
 export type FormStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected';
 
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'needs-clarification' | 'clarification_requested';

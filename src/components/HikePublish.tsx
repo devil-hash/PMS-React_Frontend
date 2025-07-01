@@ -299,7 +299,7 @@ const HikePublish: React.FC<{
                 onClick={() => setActiveTab('approvals')}
                 className={`py-2 px-4 rounded ${activeTab === 'approvals' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
               >
-                Pending Approvals ({allPendingApprovals.length})
+                Form Approvals 
               </button>
               <button
                 onClick={handleCreateNew}

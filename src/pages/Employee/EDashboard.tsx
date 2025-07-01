@@ -66,37 +66,41 @@ const EmployeeDashboard: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const data: EmployeeHikeCycle[] = [
-          {
-            title:"Annual Hike 2024",
-            id: 1,
-            name: "Annual Review 2024",
-            status: "active",
-            type: "Annual",
-            period: "2024-01-01 to 2024-03-31",
-            dueDate: "2024-03-31",
-            participants: 1,
-            completed: 0,
-            pending: 1,
-            progress: 0,
-            manager: employeeData.manager,
-            isSubmitted: false,
-            milestones: [
-              {
-                id: 1,
-                title: "Self Review Submission",
-                description: "Complete your self-assessment",
-                dueDate: "2024-02-15",
-                status: "in-progress"
-              }
-            ],
-            details: {
-              formsSubmitted: 0,
-              approved: 0,
-              clarifying: 0,
-              pendingApproval: 0,
-              averageRating: 0,
-              departments: [employeeData.department]
-            }
+  {
+    title: "Annual Hike 2024",
+    id: 1,
+    name: "Annual Review 2024",
+    status: "active",
+    type: "Annual",
+    period: "2024-01-01 to 2024-03-31",
+    dueDate: "2024-03-31",
+    participants: 1,
+    completed: 0,
+    pending: 1,
+    manager: employeeData.manager,
+    isSubmitted: false,
+    milestones: [
+      {
+        id: 1,
+        title: "Self Review Submission",
+        description: "Complete your self-assessment",
+        dueDate: "2024-02-15",
+        status: "in-progress"
+      }
+    ],
+    details: {
+      formsSubmitted: 0,
+      approved: 0,
+      clarifying: 0,
+      pendingApproval: 0,
+      averageRating: 0,
+      departments: [employeeData.department],
+      // Add these if needed (now optional)
+      averageHike: "0%",
+      hikeRange: "0% - 0%",
+      highestHike: "0%",
+      lowestHike: "0%"
+    }
           },
           {
             title:"Mid-term Hike 2025",
@@ -109,7 +113,6 @@ const EmployeeDashboard: React.FC = () => {
             participants: 1,
             completed: 1,
             pending: 0,
-            progress: 100,
             manager: employeeData.manager,
             isSubmitted: true,
             selfAssessment: {
@@ -148,13 +151,18 @@ const EmployeeDashboard: React.FC = () => {
               }
             ],
             details: {
-              formsSubmitted: 1,
-              approved: 1,
-              clarifying: 0,
-              pendingApproval: 0,
-              averageRating: 4.2,
-              departments: [employeeData.department]
-            }
+      formsSubmitted: 0,
+      approved: 0,
+      clarifying: 0,
+      pendingApproval: 0,
+      averageRating: 0,
+      departments: [employeeData.department],
+      // Add these if needed (now optional)
+      averageHike: "0%",
+      hikeRange: "0% - 0%",
+      highestHike: "0%",
+      lowestHike: "0%"
+    }
           }
         ];
         setHikeCycles(data);

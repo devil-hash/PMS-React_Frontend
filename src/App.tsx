@@ -1,3 +1,4 @@
+// App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MicrosoftLoginButton from './components/MicrosoftLoginButton';
@@ -19,7 +20,7 @@ const App: React.FC = () => {
           } />
           
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/*" element={<AdminDashboard />} />
           </Route>
           
           <Route element={<ProtectedRoute allowedRoles={['manager']} />}>

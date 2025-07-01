@@ -1,347 +1,306 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import DashboardCard from '../../components/DashboardCard';
-import ReviewCycleList from '../../components/ReviewCycleList';
-import HRReportsChart from '../../components/HRReportsChart';
-import { HikeForm, HikeCycle, Approval, DashboardStat } from '../../types/reviewTypes';
-import HikePublish from '../../components/HikePublish';
-
-const PendingApprovalsList: React.FC<{
-  approvals: Approval[];
-  onViewClick: (approval: Approval) => void;
-}> = ({ approvals, onViewClick }) => (
-  <div className="overflow-x-auto">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {approvals.map((approval) => (
-          <tr key={approval.id} className="hover:bg-gray-50">
-            <td className="px-6 py-4">{approval.employeeName}</td>
-            <td className="px-6 py-4">{approval.position}</td>
-            <td className="px-6 py-4">{approval.manager}</td>
-            <td className="px-6 py-4">
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                approval.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                approval.status === 'approved' ? 'bg-green-100 text-green-800' :
-                approval.status === 'needs-clarification' ? 'bg-blue-100 text-blue-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {approval.status.replace('-', ' ')}
-              </span>
-            </td>
-            <td className="px-6 py-4">
-              <button
-                className="text-blue-600 hover:text-blue-800"
-                onClick={() => onViewClick(approval)}
-              >
-                View
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-const ApprovalDetails: React.FC<{
-  approval: Approval;
-  onBack: () => void;
-  onApprove: (hikePercentage: number, feedback: string) => void;
-  onRequestClarification: (feedback: string) => void;
-}> = ({ approval, onBack, onApprove, onRequestClarification }) => {
-  const [hikePercentage, setHikePercentage] = useState<number>(0);
-  const [feedback, setFeedback] = useState<string>('');
-  const [action, setAction] = useState<'none' | 'approve' | 'clarify'>('none');
-
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">{approval.employeeName}'s Review Details</h2>
-        <button 
-          onClick={onBack}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          Back to List
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <p className="text-sm text-gray-500">Position</p>
-            <p className="font-medium">{approval.position}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Current Salary</p>
-            <p className="font-medium">₹{approval.currentSalary.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Review Type</p>
-            <p className="font-medium">{approval.reviewType}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Submitted</p>
-            <p className="font-medium">{approval.submittedDate}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Manager</p>
-            <p className="font-medium">{approval.manager}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Overall Rating</p>
-            <p className="font-medium">{approval.rating}/5</p>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="font-semibold mb-3">Goal Assessments</h3>
-          <div className="space-y-3">
-            {approval.goals.map((goal, index) => (
-              <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                <div className="flex justify-between">
-                  <div>
-                    <h4 className="font-medium">{goal.title}</h4>
-                    <p className="text-sm text-gray-600">{goal.comments}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      Rating: {goal.rating}/5
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="font-semibold mb-3">Project Assessments</h3>
-          <div className="space-y-3">
-            {approval.projects.map((project, index) => (
-              <div key={index} className="border-l-4 border-purple-500 pl-4 py-2">
-                <div className="flex justify-between">
-                  <div>
-                    <h4 className="font-medium">{project.title}</h4>
-                    <p className="text-sm text-gray-600">{project.comments}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                      Rating: {project.rating}/5
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <h3 className="font-semibold mb-4">Review Decision</h3>
-          
-          <div className="space-y-4">
-            {action === 'approve' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Hike Percentage
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    step="0.5"
-                    value={hikePercentage}
-                    onChange={(e) => setHikePercentage(parseFloat(e.target.value))}
-                    className="border rounded px-3 py-2 w-24"
-                  />
-                  <span className="ml-2">%</span>
-                  <span className="ml-4 text-sm text-gray-600">
-                    New Salary: ₹{(approval.currentSalary * (1 + hikePercentage/100)).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            )}
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Feedback/Comments
-              </label>
-              <textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="border rounded px-3 py-2 w-full"
-                rows={3}
-                placeholder="Enter your feedback or comments..."
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-4 mt-6">
-            {action === 'none' ? (
-              <>
-                <button 
-                  onClick={() => setAction('approve')}
-                  className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                >
-                  Approve
-                </button>
-                <button 
-                  onClick={() => setAction('clarify')}
-                  className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                >
-                  Request Clarification
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={() => {
-                    if (action === 'approve') {
-                      onApprove(hikePercentage, feedback);
-                    } else {
-                      onRequestClarification(feedback);
-                    }
-                  }}
-                  className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                >
-                  Confirm {action === 'approve' ? 'Approval' : 'Request'}
-                </button>
-                <button 
-                  onClick={() => setAction('none')}
-                  className="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const reviewCycles: HikeCycle[] = [
-  {
-    id: 1,
-    title: "Annual Review 2025",
-    name: "Annual Review 2025",
-    status: "completed",
-    type: "Annual",
-    period: "Jan 2025 - Mar 2025",
-    dueDate: "2025-03-31",
-    participants: 50,
-    completed: 45,
-    pending: 5,
-    progress: 90,
-    milestones: []
-  },
-  {
-    id: 2,
-    title: "Mid-Year Review",
-    name: "Mid-Year Review",
-    status: "active",
-    type: "Mid-term",
-    period: "Jul 2025 - Aug 2025",
-    dueDate: "2025-08-15",
-    participants: 40,
-    completed: 20,
-    pending: 20,
-    progress: 50,
-    milestones: []
-  }
-];
-
-const pendingApprovals: Approval[] = [
-  {
-    id: 101,
-    employeeName: "John Doe",
-    position: "Software Engineer",
-    manager: "Alice Smith",
-    currentSalary: 600000,
-    reviewType: "Annual",
-    submittedDate: "2025-03-15",
-    rating: 4.5,
-    status: "pending",
-    hikePercentage: 0,
-    feedback: "",
-    goals: [
-      {
-        title: "Improve Code Quality",
-        comments: "Consistently followed best practices.",
-        rating: 4
-      },
-      {
-        title: "Reduce Bugs",
-        comments: "Bug count reduced by 30%.",
-        rating: 5
-      }
-    ],
-    projects: [
-      {
-        title: "Migration to React",
-        comments: "Successfully migrated frontend to React.",
-        rating: 5
-      }
-    ]
-  }
-];
+import NewHikeCycleForm from '../../components/HikeForm';
+import HikeCycleList from '../../components/HikeCycleList';
+import PieChart from '../../components/PieChart';
+import ApprovalDetails from '../../components/ApprovalDetails';
+import TemplateManager from '../../components/TemplateManager';
+import { FaFileCsv, FaFilter, FaSearch, FaChartBar, FaChartLine, FaChartPie } from 'react-icons/fa';
+import { CSVLink } from 'react-csv';
+import { HikeCycle, DashboardStat, Approval } from '../../types/reviewTypes';
+import { v4 as uuidv4 } from 'uuid';
+import { HikeForm, HikeFormField, ApprovalLevel, FormStatus, HikeFormFieldType } from '../../types/reviewTypes';
 
 const HRDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'cycles' | 'approvals' | 'reports' | 'hikePublish'>('cycles');
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'forms' | 'review-cycles' | 'approvals' | 'reports' | 'settings' | 'users' | 'templates'
+  >('dashboard');
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [selectedCycleId, setSelectedCycleId] = useState<number>(1);
   const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null);
-  const [quickAction, setQuickAction] = useState<'none' | 'template' | 'report'>('none');
-  const [approvals, setApprovals] = useState<Approval[]>(pendingApprovals);
-  const [forms, setForms] = useState<HikeForm[]>([]);
+  const [expandedCycle, setExpandedCycle] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [rejectReason, setRejectReason] = useState('');
+  const [formToReject, setFormToReject] = useState<string | null>(null);
+  const [activeForm, setActiveForm] = useState<HikeForm | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newFieldType, setNewFieldType] = useState<HikeFormFieldType>('text');
+  const [newApprovalLevel, setNewApprovalLevel] = useState<Omit<ApprovalLevel, 'level'>>({
+    title: '',
+    approvers: [],
+    isFinalApproval: false
+  });
 
-  const stats: DashboardStat[] = [
-    { title: 'Active Cycles', value: 2, trend: 'up', icon: '🔄' },
-    { title: 'Employees to Review', value: 15, trend: 'down', icon: '👥' },
-    { title: 'Pending Approvals', value: approvals.filter(a => a.status === 'pending').length, trend: 'up', icon: '⏳' },
-    { title: 'Completed Reviews', value: 32, trend: 'up', icon: '✅' },
+  // Static data for pending approvals
+  const staticPendingApprovals: HikeForm[] = [
+    {
+      id: uuidv4(),
+      title: '2023 Annual Performance Review',
+      description: 'Form for annual employee performance evaluations',
+      fields: [
+        { id: uuidv4(), label: 'Cycle Name', type: 'text', required: true },
+        { id: uuidv4(), label: 'Cycle Deadline', type: 'Date', required: true },
+        { id: uuidv4(), label: 'Goal Section', type: 'textarea', required: true },
+        { id: uuidv4(), label: 'Project Section', type: 'textarea', required: true },
+        { id: uuidv4(), label: 'Communication', type: 'number', required: true, min: 1, max: 5 },
+        { id: uuidv4(), label: 'Team Work', type: 'number', required: true, min: 1, max: 5 },
+        { id: uuidv4(), label: 'Behaviour', type: 'number', required: true, min: 1, max: 5 },
+        { id: uuidv4(), label: 'Upload Document', type: 'file', required: true, min: 1, max: 5 },
+      ],
+      approvalLevels: [
+        {
+          level: 1,
+          title: 'Manager Review',
+          approvers: ['John Doe', 'Jane Smith'],
+          isFinalApproval: false
+        },
+        {
+          level: 2,
+          title: 'Manager Head Review',
+          approvers: ['Managing HIgher Officials'],
+          isFinalApproval: false
+        },
+        {
+          level: 3,
+          title: 'HR Approval',
+          approvers: ['HR Department'],
+          isFinalApproval: true
+        }
+      ],
+      status: 'pending_approval',
+      createdAt: '2023-01-15T10:30:00Z',
+      updatedAt: '2023-01-15T10:30:00Z'
+    },
+    {
+      id: uuidv4(),
+      title: 'Q3 Promotion Cycle',
+      description: 'Form for promotion recommendations and approvals',
+      fields: [
+        { id: uuidv4(), label: 'Current Position', type: 'text', required: true },
+        { id: uuidv4(), label: 'Recommended Position', type: 'text', required: true },
+        { id: uuidv4(), label: 'Justification', type: 'textarea', required: true },
+        { id: uuidv4(), label: 'Salary Adjustment %', type: 'number', required: false, min: 0, max: 50 }
+      ],
+      approvalLevels: [
+        {
+          level: 1,
+          title: 'Department Head',
+          approvers: ['Department Heads'],
+          isFinalApproval: false
+        },
+        {
+          level: 2,
+          title: 'Compensation Committee',
+          approvers: ['Comp Team'],
+          isFinalApproval: false
+        },
+        {
+          level: 3,
+          title: 'HR Final Approval',
+          approvers: ['HR Director'],
+          isFinalApproval: true
+        }
+      ],
+      status: 'pending_approval',
+      createdAt: '2023-06-20T14:15:00Z',
+      updatedAt: '2023-06-20T14:15:00Z'
+    }
   ];
 
-  const handleSave = (form: HikeForm) => {
-    setForms(prevForms => {
-      const existingIndex = prevForms.findIndex(f => f.id === form.id);
-      if (existingIndex >= 0) {
-        const updatedForms = [...prevForms];
-        updatedForms[existingIndex] = form;
-        return updatedForms;
-      } else {
-        return [...prevForms, form];
+  // Sample data
+  const existingForms = [
+    { id: 1, name: 'Annual Review 2024', createdBy: 'Admin', createdOn: '2024-01-10' },
+    { id: 2, name: 'Mid-Year Review 2024', createdBy: 'Admin', createdOn: '2024-06-10' }
+  ];
+
+  const hikeCycles: HikeCycle[] = [
+    {
+      title: "Annual Review 2024",
+      id: 1,
+      name: "Annual Review 2024",
+      status: "active",
+      type: "Annual",
+      period: "2024-01-01 to 2024-03-31",
+      dueDate: "2024-03-31",
+      participants: 45,
+      completed: 12,
+      pending: 33,
+      manager: "Mr. Murugan",
+      milestones: [],
+      details: {
+        formsSubmitted: 38,
+        approved: 12,
+        clarifying: 5,
+        pendingApproval: 21,
+        averageRating: 3.8,
+        departments: ['Engineering', 'Product', 'Marketing']
       }
-    });
+    },
+    {
+      title: "Quarterly Review 2025",
+      id: 2,
+      name: "Mid-term Review 2024",
+      status: "completed",
+      type: "Mid-term",
+      period: "2024-07-01 to 2024-09-30",
+      dueDate: "2024-09-30",
+      participants: 45,
+      completed: 45,
+      pending: 0,
+      manager: "Mr. Murugan",
+      milestones: [],
+      details: {
+        formsSubmitted: 45,
+        approved: 42,
+        clarifying: 3,
+        pendingApproval: 0,
+        averageRating: 4.1,
+        departments: ['All Departments']
+      }
+    }
+  ];
+
+  const approvals: Approval[] = [
+    {
+      id: 101,
+      employeeName: "John Doe",
+      position: "Software Engineer",
+      manager: "Alice Smith",
+      currentSalary: 600000,
+      reviewType: "Annual",
+      submittedDate: "2025-03-15",
+      rating: 4.5,
+      status: "pending",
+      hikePercentage: 0,
+      feedback: "",
+      goals: [
+        {
+          title: "Improve Code Quality",
+          comments: "Consistently followed best practices.",
+          rating: 4
+        },
+        {
+          title: "Reduce Bugs",
+          comments: "Bug count reduced by 30%.",
+          rating: 5
+        }
+      ],
+      projects: [
+        {
+          title: "Migration to React",
+          comments: "Successfully migrated frontend to React.",
+          rating: 5
+        }
+      ]
+    }
+  ];
+
+  const statusClasses: Record<FormStatus, string> = {
+    draft: 'bg-yellow-100 text-yellow-800',
+    pending_approval: 'bg-blue-100 text-blue-800',
+    approved: 'bg-green-100 text-green-800',
+    rejected: 'bg-gray-100 text-gray-800'
   };
 
-  const handleLaunch = (form: HikeForm) => {
-    alert(`Launching hike form: ${form.title}`);
-    setForms(prevForms => 
-      prevForms.map(f => 
-        f.id === form.id ? { ...form, status: 'pending_approval' } : f
-      )
-    );
+  // Enhanced analytics data
+  const analyticsData = {
+    participationTrends: [
+      { month: 'Jan', participants: 120, completed: 85 },
+      { month: 'Feb', participants: 150, completed: 110 },
+      { month: 'Mar', participants: 180, completed: 150 },
+      { month: 'Apr', participants: 200, completed: 175 },
+      { month: 'May', participants: 220, completed: 190 },
+      { month: 'Jun', participants: 250, completed: 230 },
+    ],
+    departmentStats: [
+      { name: 'Engineering', participation: 95, avgRating: 4.2 },
+      { name: 'Product', participation: 88, avgRating: 4.1 },
+      { name: 'Marketing', participation: 92, avgRating: 3.9 },
+      { name: 'Sales', participation: 85, avgRating: 3.8 },
+      { name: 'HR', participation: 98, avgRating: 4.3 },
+    ],
+    ratingDistribution: [
+      { rating: 1, count: 5 },
+      { rating: 2, count: 12 },
+      { rating: 3, count: 45 },
+      { rating: 4, count: 120 },
+      { rating: 5, count: 65 },
+    ],
+    completionRates: {
+      currentCycle: 78,
+      previousCycle: 65,
+      average: 72,
+    },
   };
 
-  const handleHomeClick = () => {
-    navigate('/hr', { replace: true });
-  };
+  // Filter cycles for reports
+  const filteredCycles = hikeCycles.filter(cycle => {
+    const matchesSearch = cycle.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         cycle.type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || cycle.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const handleTabChange = (tab: 'cycles' | 'approvals' | 'reports' | 'hikePublish') => {
-    setActiveTab(tab);
-    setSelectedApproval(null);
+  // Prepare CSV data
+  const csvData = filteredCycles.map(cycle => ({
+    Name: cycle.name,
+    Type: cycle.type,
+    Status: cycle.status,
+    Period: cycle.period,
+    'Due Date': cycle.dueDate,
+    Participants: cycle.participants,
+    Completed: cycle.completed,
+    'Average Rating': cycle.details?.averageRating,
+    'Forms Submitted': cycle.details?.formsSubmitted,
+    Approved: cycle.details?.approved,
+    'Pending Approval': cycle.details?.pendingApproval
+  }));
+
+  const selectedCycle = hikeCycles.find(cycle => cycle.id === selectedCycleId);
+
+  const summaryStats: DashboardStat[] = [
+    {
+      title: 'Total Hike Cycles',
+      value: hikeCycles.length,
+      icon: '📊',
+      trend: 'up'
+    },
+    {
+      title: 'Active Cycles',
+      value: hikeCycles.filter(c => c.status === 'active').length,
+      icon: '⏳',
+      trend: 'neutral'
+    },
+    {
+      title: 'Total Employees',
+      value: hikeCycles.reduce((sum, cycle) => sum + cycle.participants, 0),
+      icon: '👥',
+      trend: 'up'
+    },
+    {
+      title: 'Avg Completion',
+      value: `${Math.round(
+        hikeCycles.reduce((sum, cycle) => sum + (cycle.completed / cycle.participants) * 100, 0) /
+        hikeCycles.length
+      )}%`,
+      icon: '✅',
+      trend: 'up'
+    }
+  ];
+
+  const selectedPieData = selectedCycle?.details ? [
+    { name: 'Approved', value: selectedCycle.details.approved },
+    { name: 'Clarifying', value: selectedCycle.details.clarifying },
+    { name: 'Pending', value: selectedCycle.details.pendingApproval }
+  ] : [];
+
+  const handlePublish = (data: any) => {
+    console.log('Published New Form:', data);
+    setShowNewForm(false);
+    setActiveTab('forms');
   };
 
   const handleViewApproval = (approval: Approval) => {
@@ -350,147 +309,570 @@ const HRDashboard: React.FC = () => {
 
   const handleApprove = (hikePercentage: number, feedback: string) => {
     if (!selectedApproval) return;
-    
-    setApprovals(prev => 
-      prev.map(a => 
-        a.id === selectedApproval.id 
-          ? { 
-              ...a, 
-              status: 'approved', 
-              hikePercentage,
-              feedback,
-              newSalary: a.currentSalary * (1 + hikePercentage/100)
-            } 
-          : a
-      )
-    );
-    
     setSelectedApproval(null);
     alert(`Approved with ${hikePercentage}% hike!`);
   };
 
   const handleRequestClarification = (feedback: string) => {
     if (!selectedApproval) return;
-    
-    setApprovals(prev => 
-      prev.map(a => 
-        a.id === selectedApproval.id 
-          ? { ...a, status: 'needs-clarification', feedback } 
-          : a
-      )
-    );
-    
     setSelectedApproval(null);
     alert('Clarification requested!');
   };
 
+  const handleRejectClick = (formId: string) => {
+    setFormToReject(formId);
+  };
+
+  const confirmReject = () => {
+    if (formToReject && rejectReason.trim()) {
+      handleRejectHikeForm(formToReject);
+    }
+  };
+
+  const toggleExpand = (id: number) => {
+    setExpandedCycle(expandedCycle === id ? null : id);
+  };
+
+  const handleApproveHikeForm = (formId: string) => {
+    const approvedForm = staticPendingApprovals.find(form => form.id === formId);
+    if (approvedForm) {
+      const updatedForm = { ...approvedForm, status: 'approved' };
+      alert(`Form "${updatedForm.title}" approved successfully!`);
+    }
+    setActiveForm(null);
+  };
+
+  const handleRejectHikeForm = (formId: string) => {
+    if (!rejectReason) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+    const rejectedForm = staticPendingApprovals.find(form => form.id === formId);
+    if (rejectedForm) {
+      alert(`Form "${rejectedForm.title}" rejected with reason: ${rejectReason}`);
+    }
+    setActiveForm(null);
+    setRejectReason('');
+    setFormToReject(null);
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'forms':
+        return showNewForm ? (
+          <NewHikeCycleForm
+            onCancel={() => setShowNewForm(false)}
+            onPublish={handlePublish}
+          />
+        ) : (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Performance Review Forms</h2>
+              <button
+                onClick={() => setShowNewForm(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                + New Form
+              </button>
+            </div>
+            <ul className="bg-white shadow rounded divide-y">
+              {existingForms.map(form => (
+                <li key={form.id} className="p-4 flex justify-between">
+                  <span>{form.name}</span>
+                  <span className="text-sm text-gray-500">Created by {form.createdBy} on {form.createdOn}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+
+      case 'templates':
+        return <TemplateManager />;
+
+      case 'review-cycles':
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-6">Performance Review Cycles</h2>
+            <HikeCycleList
+              cycles={hikeCycles}
+              expandedCycle={expandedCycle}
+              onManageClick={toggleExpand}
+            />
+          </div>
+        );
+
+      case 'approvals':
+        if (activeForm) {
+          return (
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold">Review Form: {activeForm.title}</h3>
+                <button
+                  onClick={() => setActiveForm(null)}
+                  className="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
+                >
+                  Back to List
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-md font-semibold mb-2">Description</h4>
+                  <p className="text-gray-700">{activeForm.description || 'No description provided'}</p>
+                </div>
+
+                <div>
+                  <h4 className="text-md font-semibold mb-3">Form Fields</h4>
+                  <div className="space-y-3">
+                    {activeForm.fields.map(field => (
+                      <div key={field.id} className="border rounded p-4">
+                        <div className="font-medium">{field.label}</div>
+                        <div className="text-sm text-gray-500 capitalize">
+                          {field.type} {field.required && '(required)'}
+                        </div>
+                        {field.type === 'select' && (
+                          <div className="mt-2 text-sm">
+                            Options: {field.options?.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-md font-semibold mb-3">Approval Workflow</h4>
+                  <div className="space-y-3">
+                    {activeForm.approvalLevels.map(level => (
+                      <div key={level.level} className="border rounded p-3">
+                        <div className="flex justify-between">
+                          <div>
+                            <span className="font-medium">Level {level.level}: {level.title}</span>
+                            {level.isFinalApproval && (
+                              <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                Final Approval
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-1 text-sm text-gray-600">
+                          Approvers: {level.approvers.join(', ')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h4 className="text-md font-semibold mb-4">Approval Decision</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Feedback (Required for rejection)
+                      </label>
+                      <textarea
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        className="border rounded px-3 py-2 w-full"
+                        rows={3}
+                        placeholder="Provide feedback or reason for rejection..."
+                      />
+                    </div>
+                    <div className="flex justify-end gap-4">
+                      <button
+                        onClick={() => handleRejectClick(activeForm.id)}
+                        className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleApproveHikeForm(activeForm.id)}
+                        className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                      >
+                        Approve & Publish
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return selectedApproval ? (
+          <ApprovalDetails
+            approval={selectedApproval}
+            onBack={() => setSelectedApproval(null)}
+            onApprove={handleApprove}
+            onRequestClarification={handleRequestClarification}
+          />
+        ) : (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Pending Approvals ({staticPendingApprovals.length})</h2>
+            </div>
+
+            {staticPendingApprovals.length > 0 ? (
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Form Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fields</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {staticPendingApprovals.map(form => (
+                      <tr key={form.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap font-medium">{form.title}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{form.fields.length}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {new Date(form.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${statusClasses[form.status]}`}>
+                            {form.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                          <button
+                            onClick={() => {
+                              setActiveForm(form);
+                              setIsEditing(false);
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-8 text-center">
+                <p className="text-gray-500">No forms pending approval</p>
+              </div>
+            )}
+
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-4">Employee Performance Approvals</h2>
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manager</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {approvals.filter(a => a.status === 'pending').map(approval => (
+                      <tr key={approval.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap font-medium">{approval.employeeName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{approval.position}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{approval.manager}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{approval.rating}</td>
+                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                          <button
+                            onClick={() => handleViewApproval(approval)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'reports':
+        return (
+          <div className="p-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+              <h1 className="text-2xl font-semibold">Performance Review Analytics</h1>
+              
+              <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaSearch className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search cycles..."
+                    className="pl-10 pr-4 py-2 border rounded-lg w-full"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaFilter className="text-gray-400" />
+                  </div>
+                  <select
+                    className="pl-10 pr-4 py-2 border rounded-lg appearance-none w-full"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                
+                <CSVLink 
+                  data={csvData} 
+                  filename={`performance-reviews-${new Date().toISOString().slice(0,10)}.csv`}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <FaFileCsv /> Export CSV
+                </CSVLink>
+              </div>
+            </div>
+
+            {/* Enhanced Analytics Dashboard */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Participation Trends Card */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FaChartLine className="text-blue-500" /> Participation Trends
+                  </h3>
+                  <select className="border rounded px-2 py-1 text-sm">
+                    <option>Last 6 Months</option>
+                    <option>Last Year</option>
+                    <option>All Time</option>
+                  </select>
+                </div>
+                <div className="h-64">
+                  {/* This would be replaced with an actual chart component */}
+                  <div className="flex items-end h-48 gap-2 mt-4">
+                    {analyticsData.participationTrends.map((item, index) => (
+                      <div key={index} className="flex-1 flex flex-col items-center">
+                        <div className="flex gap-1 w-full h-40">
+                          <div 
+                            className="bg-blue-200 w-full rounded-t"
+                            style={{ height: `${(item.participants / 300) * 100}%` }}
+                          ></div>
+                          <div 
+                            className="bg-green-200 w-full rounded-t"
+                            style={{ height: `${(item.completed / 300) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs mt-2">{item.month}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-center gap-4 mt-4">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-blue-200 rounded-full"></div>
+                      <span className="text-xs">Participants</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-green-200 rounded-full"></div>
+                      <span className="text-xs">Completed</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Department Performance Card */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FaChartBar className="text-purple-500" /> Department Performance
+                  </h3>
+                </div>
+                <div className="h-64">
+                  <div className="grid grid-cols-2 gap-4 h-full">
+                    <div className="flex flex-col">
+                      <h4 className="text-sm font-medium mb-2">Participation %</h4>
+                      <div className="space-y-2 flex-1">
+                        {analyticsData.departmentStats.map((dept, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <span className="text-xs w-20 truncate">{dept.name}</span>
+                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-500 h-2 rounded-full" 
+                                style={{ width: `${dept.participation}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs w-8 text-right">{dept.participation}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <h4 className="text-sm font-medium mb-2">Avg Rating</h4>
+                      <div className="space-y-2 flex-1">
+                        {analyticsData.departmentStats.map((dept, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <span className="text-xs w-20 truncate">{dept.name}</span>
+                            <div className="flex-1 flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className={`w-3 h-3 rounded-sm ${i < Math.floor(dept.avgRating) ? 'bg-yellow-500' : 'bg-gray-200'}`}
+                                ></div>
+                              ))}
+                            </div>
+                            <span className="text-xs w-8 text-right">{dept.avgRating.toFixed(1)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Review Cycles Table */}
+            <div className="bg-white rounded-lg shadow overflow-hidden mt-6">
+              <div className="p-4 border-b">
+                <h3 className="text-lg font-semibold">Review Cycles Summary</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredCycles.length > 0 ? (
+                      filteredCycles.map((cycle) => (
+                        <tr key={cycle.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cycle.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.type}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              cycle.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                              cycle.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {cycle.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.period}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.participants}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.completed}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {cycle.details?.averageRating || '-'}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                          No matching review cycles found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+
+      default: // Dashboard
+        return (
+          <>
+            <h1 className="text-2xl font-semibold mb-6">HR Dashboard Overview</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {summaryStats.map((stat, index) => (
+                <DashboardCard key={index} {...stat} />
+              ))}
+            </div>
+            <div className="bg-white p-4 rounded shadow mb-6">
+              <h3 className="text-lg font-semibold mb-3">Choose a Hike Cycle to View Chart</h3>
+              <div className="flex flex-wrap gap-4">
+                {hikeCycles.map(cycle => (
+                  <label key={cycle.id} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="cycle"
+                      value={cycle.id}
+                      checked={selectedCycleId === cycle.id}
+                      onChange={() => setSelectedCycleId(cycle.id)}
+                    />
+                    {cycle.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="mb-8 bg-white rounded-lg shadow p-6" style={{ height: 400 }}>
+              <PieChart
+                data={selectedPieData}
+                title={`${selectedCycle?.name} - Status Distribution`}
+              />
+            </div>
+          </>
+        );
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-100">
-      <Sidebar onHomeClick={handleHomeClick} />
+      <Sidebar 
+        role="hr" 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-y-auto p-6">
-          <h1 className="text-2xl font-semibold mb-6">HR Dashboard</h1>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <DashboardCard key={index} {...stat} />
-            ))}
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <div className="flex border-b mb-6">
-              <button
-                className={`py-2 px-4 ${activeTab === 'cycles' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-                onClick={() => handleTabChange('cycles')}
-              >
-                Hike Cycles
-              </button>
-              <button
-                className={`py-2 px-4 ${activeTab === 'approvals' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-                onClick={() => handleTabChange('approvals')}
-              >
-                Hike Approvals ({approvals.filter(a => a.status === 'pending').length})
-              </button>
-              <button
-                className={`py-2 px-4 ${activeTab === 'hikePublish' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-                onClick={() => handleTabChange('hikePublish')}
-              >
-                Hike Publish
-              </button>
-              <button
-                className={`py-2 px-4 ${activeTab === 'reports' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}
-                onClick={() => handleTabChange('reports')}
-              >
-                Reports & Analytics
-              </button>
-            </div>
-
-            {activeTab === 'cycles' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Performance Review Cycles</h2>
-                <ReviewCycleList cycles={reviewCycles} />
-              </div>
-            )}
-
-            {activeTab === 'approvals' && (
-              <div>
-                {selectedApproval ? (
-                  <ApprovalDetails
-                    approval={selectedApproval}
-                    onBack={() => setSelectedApproval(null)}
-                    onApprove={handleApprove}
-                    onRequestClarification={handleRequestClarification}
-                  />
-                ) : (
-                  <>
-                    <h2 className="text-xl font-semibold mb-4">Pending Approvals</h2>
-                    <PendingApprovalsList 
-                      approvals={approvals.filter(a => a.status === 'pending')} 
-                      onViewClick={handleViewApproval} 
-                    />
-                  </>
-                )}
-              </div>
-            )}
-            
-            {activeTab === 'hikePublish' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Publish Hike</h2>
-                <HikePublish 
-                  forms={forms} 
-                  pendingApprovals={forms.filter(f => f.status === 'pending_approval')}
-                  onSave={handleSave} 
-                  onPublish={handleLaunch} 
-                  onApprove={(formId) => {
-                    setForms(prevForms => 
-                      prevForms.map(f => 
-                        f.id === formId ? { ...f, status: 'approved' } : f
-                      )
-                    );
-                    alert(`Approved form ${formId}`);
-                  }} 
-                  onReject={(formId, reason) => {
-                    setForms(prevForms => 
-                      prevForms.map(f => 
-                        f.id === formId ? { ...f, status: 'rejected' } : f
-                      )
-                    );
-                    alert(`Rejected form ${formId} because: ${reason}`);
-                  }} 
-                />
-              </div>
-            )}
-
-            {activeTab === 'reports' && (
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Review Analytics</h2>
-                <HRReportsChart />
-              </div>
-            )}
-          </div>
+          {renderContent()}
         </main>
       </div>
+
+      {/* Reject Reason Modal */}
+      {formToReject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium mb-4">Reason for Rejection</h3>
+            <textarea
+              className="w-full border rounded p-2 mb-4"
+              rows={4}
+              placeholder="Enter reason for rejecting this form..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 border rounded"
+                onClick={() => setFormToReject(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={confirmReject}
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
