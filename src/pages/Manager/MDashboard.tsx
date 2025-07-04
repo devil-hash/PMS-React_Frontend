@@ -8,27 +8,80 @@ import TeamPerformanceChart from '../../components/TeamPerformanceChart';
 import ProjectReview from '../../components/ProjectReview';
 import GoalReview from '../../components/GoalReview';
 import OverallReview from '../../components/OverallReview';
+import PieChart from '../../components/PieChart';
+import { FaFileCsv, FaFilter, FaSearch, FaChartBar, FaChartLine, FaChartPie, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { Review, SkillCategory, SkillQuestion } from '../../types/reviewTypes';
+import { CSVLink } from 'react-csv';
 
 interface RatingDropdownProps {
   value: number;
   onChange: (value: number) => void;
 }
+type RatingOption = {
+  value: number;
+  label: string;
+};
+const ratingOptions: RatingOption[] = [
+  { value: 1, label: "Poor" },
+  { value: 2, label: "Fair" },
+  { value: 3, label: "Good" },
+  { value: 4, label: "Very Good" },
+  { value: 5, label: "Excellent" }
+];
+
+interface TeamReviewCycle {
+  id: number;
+  name: string;
+  type: string;
+  status: 'active' | 'completed';
+  period: string;
+  dueDate: string;
+  participants: number;
+  completed: number;
+  pending: number;
+  manager: string;
+  details: {
+    formsSubmitted: number;
+    approved: number;
+    clarifying: number;
+    pendingApproval: number;
+    averageRating: number;
+    departments: string[];
+  };
+}
+
+interface ReportData {
+  Name: string;
+  Type: string;
+  Status: string;
+  Period: string;
+  'Due Date': string;
+  Participants: number;
+  Completed: number;
+  'Average Rating'?: number;
+  'Forms Submitted'?: number;
+  Approved?: number;
+  'Pending Approval'?: number;
+  Clarifying?: number;
+}
 
 const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [activeAction, setActiveAction] = useState<'newReview' | 'teamGoals' | 'reports' | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'reviews' | 'reports'>('dashboard');
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [activeReviewTab, setActiveReviewTab] = useState<'goals' | 'projects' | 'overall' | 'skills'>('goals');
   const [isViewingCompletedReview, setIsViewingCompletedReview] = useState(false);
   const [overallFeedback, setOverallFeedback] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [expandedCycle, setExpandedCycle] = useState<number | null>(null);
 
   const stats = [
-    { title: 'Team Members', value: 8, icon: '👥' },
-    { title: 'Pending Reviews', value: 5, icon: '⏳' },
-    { title: 'Completed Reviews', value: 3, icon: '✅' },
-    { title: 'Average Team Rating', value: 4.1, icon: '⭐' },
-  ];
+    { title: 'Team Members', value: 8, icon: '👥', trend: 'up' },
+    { title: 'Pending Reviews', value: 5, icon: '⏳', trend: 'down' },
+    { title: 'Completed Reviews', value: 3, icon: '✅', trend: 'up' },
+    { title: 'Average Team Rating', value: 4.1, icon: '⭐', trend: 'neutral' },
+  ] as const;
 
   const [pendingReviews, setPendingReviews] = useState<Review[]>([
     { 
@@ -297,32 +350,126 @@ const ManagerDashboard: React.FC = () => {
     },
   ]);
 
-  const teamGoals = [
-    { title: 'Improve Code Quality', progress: 65, target: 'Reduce bugs by 25%' },
-    { title: 'Increase Velocity', progress: 45, target: 'Deliver 10% more features' },
-    { title: 'Team Training', progress: 80, target: 'Complete all training modules' },
+  const teamReviewCycles: TeamReviewCycle[] = [
+    {
+      id: 1,
+      name: "Annual Review 2024 - Engineering Team",
+      type: "Annual",
+      status: "active",
+      period: "2024-01-01 to 2024-03-31",
+      dueDate: "2024-03-31",
+      participants: 12,
+      completed: 5,
+      pending: 7,
+      manager: "Mr. Murugan",
+      details: {
+        formsSubmitted: 10,
+        approved: 3,
+        clarifying: 2,
+        pendingApproval: 5,
+        averageRating: 3.9,
+        departments: ['Engineering']
+      }
+    },
+    {
+      id: 2,
+      name: "Mid-term Review 2024 - Engineering Team",
+      type: "Mid-term",
+      status: "completed",
+      period: "2024-07-01 to 2024-09-30",
+      dueDate: "2024-09-30",
+      participants: 12,
+      completed: 12,
+      pending: 0,
+      manager: "Mr. Murugan",
+      details: {
+        formsSubmitted: 12,
+        approved: 11,
+        clarifying: 1,
+        pendingApproval: 0,
+        averageRating: 4.2,
+        departments: ['Engineering']
+      }
+    },
+    {
+      id: 3,
+      name: "Q1 Performance Review 2025 - Engineering Team",
+      type: "Quarterly",
+      status: "completed",
+      period: "2025-01-01 to 2025-03-31",
+      dueDate: "2025-03-31",
+      participants: 15,
+      completed: 15,
+      pending: 0,
+      manager: "Mr. Murugan",
+      details: {
+        formsSubmitted: 15,
+        approved: 14,
+        clarifying: 1,
+        pendingApproval: 0,
+        averageRating: 4.3,
+        departments: ['Engineering']
+      }
+    }
   ];
 
-  const reports = [
-    { title: 'Q2 Performance Summary', date: '2023-06-15', type: 'PDF' },
-    { title: 'Team Skill Matrix', date: '2023-05-30', type: 'Excel' },
-    { title: 'Employee Engagement Survey', date: '2023-04-20', type: 'PDF' },
-  ];
+  // Enhanced performance data for the chart
+  const performanceData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Technical Skills',
+        data: [3.8, 4.0, 4.1, 4.2, 4.3, 4.4],
+        backgroundColor: ['#3b82f6'],
+        borderColor: ['#2563eb'],
+        borderWidth: 2,
+        borderRadius: 4,
+        barPercentage: 0.7,
+      },
+      {
+        label: 'Communication',
+        data: [3.5, 3.6, 3.7, 3.8, 3.9, 4.0],
+        backgroundColor: ['#10b981'],
+        borderColor: ['#059669'],
+        borderWidth: 2,
+        borderRadius: 4,
+        barPercentage: 0.7,
+      },
+      {
+        label: 'Productivity',
+        data: [3.9, 4.0, 4.1, 4.2, 4.2, 4.3],
+        backgroundColor: ['#f59e0b'],
+        borderColor: ['#d97706'],
+        borderWidth: 2,
+        borderRadius: 4,
+        barPercentage: 0.7,
+      },
+      {
+        label: 'Teamwork',
+        data: [4.0, 4.1, 4.1, 4.2, 4.2, 4.3],
+        backgroundColor: ['#8b5cf6'],
+        borderColor: ['#7c3aed'],
+        borderWidth: 2,
+        borderRadius: 4,
+        barPercentage: 0.7,
+      }
+    ]
+  };
 
-  const ratingOptions = [
-    { value: 1, label: '1 - Needs Improvement' },
-    { value: 2, label: '2 - Developing' },
-    { value: 3, label: '3 - Meets Expectations' },
-    { value: 4, label: '4 - Exceeds Expectations' },
-    { value: 5, label: '5 - Outstanding' }
+  // Pie chart data for review status
+  const pieChartData = [
+    { name: 'Pending', value: pendingReviews.length, color: '#3B82F6' },
+    { name: 'Completed', value: completedReviews.length, color: '#10B981' },
+    { name: 'Overdue', value: 2, color: '#F59E0B' }
   ];
 
   const handleHomeClick = () => {
     navigate('/manager', { replace: true });
+    setActiveTab('dashboard');
   };
 
-  const handleActionClick = (action: 'newReview' | 'teamGoals' | 'reports') => {
-    setActiveAction(activeAction === action ? null : action);
+  const handleTabChange = (tab: 'dashboard' | 'reviews' | 'reports') => {
+    setActiveTab(tab);
   };
 
   const handleReviewClick = (review: Review, isCompleted: boolean) => {
@@ -442,7 +589,7 @@ const ManagerDashboard: React.FC = () => {
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
     >
-      {ratingOptions.map(option => (
+      {ratingOptions.map((option: RatingOption) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>
@@ -450,35 +597,212 @@ const ManagerDashboard: React.FC = () => {
     </select>
   );
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar onHomeClick={handleHomeClick} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-6">
-          <h1 className="text-2xl font-semibold mb-6">Manager Dashboard</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index: number) => (
-              <DashboardCard 
-                key={index} 
-                title={stat.title} 
-                value={stat.value} 
-                icon={stat.icon}
-              />
-            ))}
-          </div>
+  const renderReportsContent = () => {
+    // Filter cycles based on search and status
+    const filteredCycles = teamReviewCycles.filter(cycle => {
+      const matchesSearch = cycle.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          cycle.type.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || cycle.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
-              <h2 className="text-xl font-semibold mb-4">Employee Reviews</h2>
-              <div className="space-y-6">
+    // Prepare CSV data
+    const csvData: ReportData[] = filteredCycles.map(cycle => ({
+      Name: cycle.name,
+      Type: cycle.type,
+      Status: cycle.status,
+      Period: cycle.period,
+      'Due Date': cycle.dueDate,
+      Participants: cycle.participants,
+      Completed: cycle.completed,
+      'Average Rating': cycle.details?.averageRating,
+      'Forms Submitted': cycle.details?.formsSubmitted,
+      Approved: cycle.details?.approved,
+      'Pending Approval': cycle.details?.pendingApproval,
+      Clarifying: cycle.details?.clarifying
+    }));
+
+    const toggleExpand = (id: number) => {
+      setExpandedCycle(expandedCycle === id ? null : id);
+    };
+
+   return (
+  <div className="space-y-6">
+    {/* Title and Filters */}
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      {/* Left: Heading */}
+      <h2 className="text-2xl font-semibold">Team Performance Reports</h2>
+
+      {/* Right: Filters + Export */}
+      <div className="flex flex-col md:flex-row md:justify-end gap-4 w-full md:w-auto">
+        {/* Search */}
+        <div className="relative w-full md:w-64">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaSearch className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search cycles..."
+            className="pl-10 pr-4 py-2 border rounded-lg w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="relative w-full md:w-48">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaFilter className="text-gray-400" />
+          </div>
+          <select
+            className="pl-10 pr-4 py-2 border rounded-lg appearance-none w-full"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        {/* Export CSV */}
+        <CSVLink
+          data={csvData}
+          filename={`team-performance-reviews-${new Date().toISOString().slice(0, 10)}.csv`}
+          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 w-full md:w-auto"
+        >
+          <FaFileCsv /> Export CSV
+        </CSVLink>
+      </div>
+
+        </div>
+
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Rating</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCycles.length > 0 ? (
+                  filteredCycles.map((cycle) => (
+                    <React.Fragment key={cycle.id}>
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cycle.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.type}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            cycle.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                            cycle.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {cycle.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.period}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.participants}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.completed}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {cycle.details?.averageRating?.toFixed(1) || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <button
+                            onClick={() => toggleExpand(cycle.id)}
+                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            {expandedCycle === cycle.id ? (
+                              <>
+                                <FaChevronUp size={12} /> Hide Details
+                              </>
+                            ) : (
+                              <>
+                                <FaChevronDown size={12} /> View Details
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                      {expandedCycle === cycle.id && (
+                        <tr>
+                          <td colSpan={8} className="px-6 py-4 bg-gray-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="bg-white p-4 rounded shadow">
+                                <h3 className="font-semibold mb-2">Submission Details</h3>
+                                <div className="space-y-2">
+                                  <p><span className="font-medium">Forms Submitted:</span> {cycle.details.formsSubmitted} ({Math.round((cycle.details.formsSubmitted / cycle.participants) * 100)}%)</p>
+                                  <p><span className="font-medium">Approved:</span> {cycle.details.approved}</p>
+                                  <p><span className="font-medium">Pending Approval:</span> {cycle.details.pendingApproval}</p>
+                                  <p><span className="font-medium">Needs Clarification:</span> {cycle.details.clarifying}</p>
+                                </div>
+                              </div>
+                              <div className="bg-white p-4 rounded shadow">
+                                <h3 className="font-semibold mb-2">Performance Metrics</h3>
+                                <div className="space-y-2">
+                                  <p><span className="font-medium">Average Rating:</span> {cycle.details.averageRating.toFixed(1)}/5</p>
+                                  <p><span className="font-medium">Completion Rate:</span> {Math.round((cycle.completed / cycle.participants) * 100)}%</p>
+                                  <p><span className="font-medium">Approval Rate:</span> {cycle.details.formsSubmitted > 0 ? Math.round((cycle.details.approved / cycle.details.formsSubmitted) * 100) : 0}%</p>
+                                  <p><span className="font-medium">Team Members:</span> {cycle.participants}</p>
+                                </div>
+                              </div>
+                              <div className="bg-white p-4 rounded shadow">
+                                <h3 className="font-semibold mb-2">Cycle Information</h3>
+                                <div className="space-y-2">
+                                  <p><span className="font-medium">Manager:</span> {cycle.manager}</p>
+                                  <p><span className="font-medium">Due Date:</span> {cycle.dueDate}</p>
+                                  <p><span className="font-medium">Departments:</span> {cycle.details.departments.join(', ')}</p>
+                                  <p><span className="font-medium">Status:</span> <span className={`capitalize ${cycle.status === 'active' ? 'text-blue-600' : 'text-green-600'}`}>{cycle.status}</span></p>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                      No matching review cycles found for your team
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'reviews':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold">Employee Reviews</h2>
+
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
                 <EmployeeReviewList 
                   title="Pending Your Review" 
                   reviews={pendingReviews} 
                   status="pending"
                   onReviewClick={(review: Review) => handleReviewClick(review, false)}
                 />
+              </div>
+              <div>
                 <EmployeeReviewList 
                   title="Completed Reviews" 
                   reviews={completedReviews} 
@@ -487,90 +811,66 @@ const ManagerDashboard: React.FC = () => {
                 />
               </div>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Team Performance</h2>
-              <TeamPerformanceChart />
-            </div>
           </div>
+        );
 
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-            <div className="flex flex-wrap gap-4">
-              <button 
-                className={`py-2 px-4 rounded transition-colors ${
-                  activeAction === 'teamGoals' 
-                    ? 'bg-green-700 text-white' 
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                } flex items-center gap-2`}
-                onClick={() => handleActionClick('teamGoals')}
-              >
-                <span>🎯</span> View Team Goals
-              </button>
-              <button 
-                className={`py-2 px-4 rounded transition-colors ${
-                  activeAction === 'reports' 
-                    ? 'bg-purple-700 text-white' 
-                    : 'bg-purple-600 text-white hover:bg-purple-700'
-                } flex items-center gap-2`}
-                onClick={() => handleActionClick('reports')}
-              >
-                <span>📊</span> Generate Reports
-              </button>
+      case 'reports':
+        return renderReportsContent();
+
+      default: // Dashboard
+        return (
+          <>
+            <h1 className="text-2xl font-semibold mb-4">Manager Dashboard Overview</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {stats.map((stat, index: number) => (
+                <DashboardCard 
+                  key={index} 
+                  title={stat.title} 
+                  value={stat.value} 
+                  icon={stat.icon}
+                  trend={stat.trend}
+                />
+              ))}
             </div>
-          </div>
 
-          {activeAction && (
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h3 className="text-lg font-semibold mb-4">
-                {activeAction === 'newReview' && 'Start New Review'}
-                {activeAction === 'teamGoals' && 'Team Goals'}
-                {activeAction === 'reports' && 'Available Reports'}
+            <div className="bg-white rounded-lg shadow p-6 w-full mt-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FaChartPie className="text-blue-500" /> Review Status
               </h3>
-              
-              {activeAction === 'teamGoals' && (
-                <div className="space-y-6">
-                  {teamGoals.map((goal, index: number) => (
-                    <div key={index} className="border-b border-gray-100 last:border-b-0 pb-6 last:pb-0">
-                      <div className="flex justify-between items-start gap-4">
-                        <h4 className="font-medium text-gray-900">{goal.title}</h4>
-                        <span className="text-sm font-medium">
-                          {goal.progress}% complete
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                        <div 
-                          className="bg-green-600 h-2.5 rounded-full" 
-                          style={{ width: `${goal.progress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-3">Target: {goal.target}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeAction === 'reports' && (
-                <div className="space-y-6">
-                  {reports.map((report, index: number) => (
-                    <div key={index} className="border-b border-gray-100 last:border-b-0 pb-6 last:pb-0">
-                      <div className="flex justify-between items-start gap-4">
-                        <h4 className="font-medium text-gray-900">{report.title}</h4>
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                          {report.date}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-sm text-gray-600">{report.type}</span>
-                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">
-                          <span>⬇️</span> Download
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="h-74 w-full">
+                <PieChart 
+                  data={pieChartData}
+                  title="Review Completion Status"
+                />
+              </div>
             </div>
-          )}
+          </>
+        );
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar
+        role="manager"
+        activeTab={activeTab === 'reviews' ? 'performance-review' : activeTab === 'reports' ? 'reports' : 'dashboard'}
+        onTabChange={(tab) => {
+          if (tab === "performance-review") {
+            handleTabChange('reviews');
+          } else if (tab === "reports") {
+            handleTabChange('reports');
+          } else {
+            handleTabChange('dashboard');
+          }
+        }}
+        onHomeClick={handleHomeClick}
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar />
+        <main className="flex-1 overflow-y-auto p-6">
+          {renderContent()}
         </main>
       </div>
 
@@ -860,6 +1160,37 @@ const ManagerDashboard: React.FC = () => {
                       isViewOnly={false}
                     />
                   )}
+
+                  <div className="flex justify-end gap-4 mt-8">
+                    <button 
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                      onClick={() => {
+                        setSelectedReview(null);
+                        setIsViewingCompletedReview(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      onClick={() => {
+                        // Save the review and mark as completed
+                        const updatedPending = pendingReviews.filter(r => r.id !== selectedReview.id);
+                        const updatedCompleted = [...completedReviews, {
+                          ...selectedReview,
+                          managerRating: calculateOverallRating(selectedReview),
+                          overallFeedback
+                        }];
+                        
+                        setPendingReviews(updatedPending);
+                        setCompletedReviews(updatedCompleted);
+                        setSelectedReview(null);
+                        setIsViewingCompletedReview(false);
+                      }}
+                    >
+                      Complete Review
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -869,5 +1200,45 @@ const ManagerDashboard: React.FC = () => {
     </div>
   );
 };
+
+// Helper function to calculate overall rating
+function calculateOverallRating(review: Review): number {
+  let total = 0;
+  let count = 0;
+
+  // Add goals ratings
+  if (review.goals) {
+    review.goals.forEach(goal => {
+      if (goal.managerRating) {
+        total += goal.managerRating;
+        count++;
+      }
+    });
+  }
+
+  // Add projects ratings
+  if (review.projects) {
+    review.projects.forEach(project => {
+      if (project.managerRating) {
+        total += project.managerRating;
+        count++;
+      }
+    });
+  }
+
+  // Add skills ratings
+  if (review.skills) {
+    review.skills.forEach(skill => {
+      skill.questions.forEach(question => {
+        if (question.managerRating) {
+          total += question.managerRating;
+          count++;
+        }
+      });
+    });
+  }
+
+  return count > 0 ? parseFloat((total / count).toFixed(1)) : 0;
+}
 
 export default ManagerDashboard;

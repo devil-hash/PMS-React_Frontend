@@ -120,17 +120,17 @@ const SelfAssessmentForm: React.FC<SelfAssessmentFormProps> = ({
       } as SelfAssessmentProject],
       // Initialize skills with all static rating categories and their questions
       skills: staticRatingCategories.map(category => ({
-        category: category.name,
-        description: category.description,
-        examples: '',
-        rating: 0,
-        manager: defaultManager,
-        documents: [],
-        questionAnswers: category.questions.map(question => ({
-          question,
-          answer: ''
-        }))
-      } as SelfAssessmentSkill))
+  name: category.name,
+  level: '',       // Add default value
+  improvement: '', // Add default value
+  rating: 0,       // Additional property - will need to update interface
+  manager: defaultManager, // Additional property
+  documents: [],   // Additional property
+  questionAnswers: category.questions.map(question => ({
+    question,
+    answer: ''
+  }))             // Additional property
+} as unknown as SelfAssessmentSkill))
     };
   });
 

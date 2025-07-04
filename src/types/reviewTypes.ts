@@ -57,7 +57,81 @@ export interface Review {
   overallFeedback?: string;
   skills?: SkillCategory[];
 }
+export interface HikeRecommendation {
+  percentage: string;
+  justification: string;
+  status: 'pending' | 'approved' | 'clarifying';
+}
+export interface ManagerReviewSkill {
+  name: string;
+  rating: number;
+  feedback: string;
+}
+// reviewTypes.ts
+export interface ManagerReview {
+  id: number;
+  cycleId: number;
+  cycleName: string;
+  manager: string;
+  date: string;
+  overallRating: number;
+  feedback: string;
+  goals: {
+    title: string;
+    rating: number;
+    feedback: string;
+  }[];
+  projects: {
+    name: string;
+    rating: number;
+    feedback: string;
+  }[];
+  skills?: ManagerReviewSkill[]; // Make it optional if not all reviews have it
+  strengths: string[];
+  areasForImprovement: string[];
+  hikeRecommendation: {
+    percentage: string;
+    justification: string;
+    status: 'approved' | 'pending' | 'clarifying';
+  };
+}
+export interface SelfAssessmentSkill {
+  name: string;
+  level: string;
+  improvement: string;
+}
 
+export interface SelfAssessment {
+  goals: {
+    title: string;
+    description: string;
+    achievement: string;
+    rating: number;
+    manager: string;
+    documents: any[];
+  }[];
+  projects: {
+    name: string;
+    description: string;
+    impact: string;
+    role: string;
+    rating: number;
+    manager: string;
+    documents: any[];
+  }[];
+  skills: SelfAssessmentSkill[];
+  submittedDate ?: string;
+  status?: 'pending' | 'approved' | 'clarifying';
+  clarificationNotes?: string;
+  hikeDetails?: HikeDetails;
+}
+export interface HikeDetails {
+  percentage: string;
+  effectiveDate: string;
+  newSalary: string;
+  managerApproval: string;
+  hrApproval: string;
+}
 export interface Goal {
   id:number
   title: string;
@@ -101,19 +175,15 @@ export interface SelfAssessmentProject {
   documents: File[];
 }
 
-export interface SelfAssessment {
-  goals: SelfAssessmentGoal[];
-  projects: SelfAssessmentProject[];
-  skills: SelfAssessmentSkill[];
-  submittedDate?: string;
-}
 export interface SelfAssessmentSkill {
   category: string;
   description: string;
-  examples: string;
+  examples: string[];
   rating: number;
   manager: string;
   documents: File[];
+   yearsOfExperience?: number;
+   lastUsed?: string;
   questionAnswers: {
     question: string;
     answer: string;

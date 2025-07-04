@@ -7,7 +7,7 @@ import HikeCycleList from '../../components/HikeCycleList';
 import PieChart from '../../components/PieChart';
 import ApprovalDetails from '../../components/ApprovalDetails';
 import TemplateManager from '../../components/TemplateManager';
-import { FaFileCsv, FaFilter, FaSearch, FaChartBar, FaChartLine, FaChartPie } from 'react-icons/fa';
+import { FaFileCsv, FaFilter, FaSearch, FaChartBar, FaChartLine, FaChartPie, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { CSVLink } from 'react-csv';
 import { HikeCycle, DashboardStat, Approval } from '../../types/reviewTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,8 +15,9 @@ import { HikeForm, HikeFormField, ApprovalLevel, FormStatus, HikeFormFieldType }
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'forms' | 'review-cycles' | 'approvals' | 'reports' | 'settings' | 'users' | 'templates'
-  >('dashboard');
+    "dashboard" | "forms" | "review-cycles" | "reports" | "approvals" | "settings" | "users" | "templates" | "performance-review" |"assessments"| "reviews"
+  >("dashboard");
+
   const [showNewForm, setShowNewForm] = useState(false);
   const [selectedCycleId, setSelectedCycleId] = useState<number>(1);
   const [selectedApproval, setSelectedApproval] = useState<Approval | null>(null);
@@ -253,10 +254,11 @@ const AdminDashboard: React.FC = () => {
     'Due Date': cycle.dueDate,
     Participants: cycle.participants,
     Completed: cycle.completed,
-    'Average Rating': cycle.details?.averageRating,
+    'Average Rating': cycle.details?.averageRating?.toFixed(1),
     'Forms Submitted': cycle.details?.formsSubmitted,
     Approved: cycle.details?.approved,
-    'Pending Approval': cycle.details?.pendingApproval
+    'Pending Approval': cycle.details?.pendingApproval,
+    Clarifying: cycle.details?.clarifying
   }));
 
   const selectedCycle = hikeCycles.find(cycle => cycle.id === selectedCycleId);
@@ -509,7 +511,7 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Pending Approvals ({staticPendingApprovals.length})</h2>
+              <h2 className="text-xl font-semibold">Form Approvals ({staticPendingApprovals.length})</h2>
             </div>
 
             {staticPendingApprovals.length > 0 ? (
@@ -641,102 +643,6 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Enhanced Analytics Dashboard */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* Participation Trends Card */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <FaChartLine className="text-blue-500" /> Participation Trends
-                  </h3>
-                  <select className="border rounded px-2 py-1 text-sm">
-                    <option>Last 6 Months</option>
-                    <option>Last Year</option>
-                    <option>All Time</option>
-                  </select>
-                </div>
-                <div className="h-64">
-                  {/* This would be replaced with an actual chart component */}
-                  <div className="flex items-end h-48 gap-2 mt-4">
-                    {analyticsData.participationTrends.map((item, index) => (
-                      <div key={index} className="flex-1 flex flex-col items-center">
-                        <div className="flex gap-1 w-full h-40">
-                          <div 
-                            className="bg-blue-200 w-full rounded-t"
-                            style={{ height: `${(item.participants / 300) * 100}%` }}
-                          ></div>
-                          <div 
-                            className="bg-green-200 w-full rounded-t"
-                            style={{ height: `${(item.completed / 300) * 100}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs mt-2">{item.month}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-center gap-4 mt-4">
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 bg-blue-200 rounded-full"></div>
-                      <span className="text-xs">Participants</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 bg-green-200 rounded-full"></div>
-                      <span className="text-xs">Completed</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Department Performance Card */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <FaChartBar className="text-purple-500" /> Department Performance
-                  </h3>
-                </div>
-                <div className="h-64">
-                  <div className="grid grid-cols-2 gap-4 h-full">
-                    <div className="flex flex-col">
-                      <h4 className="text-sm font-medium mb-2">Participation %</h4>
-                      <div className="space-y-2 flex-1">
-                        {analyticsData.departmentStats.map((dept, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <span className="text-xs w-20 truncate">{dept.name}</span>
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-blue-500 h-2 rounded-full" 
-                                style={{ width: `${dept.participation}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-xs w-8 text-right">{dept.participation}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex flex-col">
-                      <h4 className="text-sm font-medium mb-2">Avg Rating</h4>
-                      <div className="space-y-2 flex-1">
-                        {analyticsData.departmentStats.map((dept, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <span className="text-xs w-20 truncate">{dept.name}</span>
-                            <div className="flex-1 flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <div 
-                                  key={i} 
-                                  className={`w-3 h-3 rounded-sm ${i < Math.floor(dept.avgRating) ? 'bg-yellow-500' : 'bg-gray-200'}`}
-                                ></div>
-                              ))}
-                            </div>
-                            <span className="text-xs w-8 text-right">{dept.avgRating.toFixed(1)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Review Cycles Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden mt-6">
               <div className="p-4 border-b">
@@ -753,30 +659,85 @@ const AdminDashboard: React.FC = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Rating</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredCycles.length > 0 ? (
                       filteredCycles.map((cycle) => (
-                        <tr key={cycle.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cycle.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.type}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              cycle.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                              cycle.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {cycle.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.period}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.participants}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.completed}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {cycle.details?.averageRating || '-'}
-                          </td>
-                        </tr>
+                        <React.Fragment key={cycle.id}>
+                          <tr className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cycle.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.type}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                cycle.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                cycle.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {cycle.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.period}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.participants}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cycle.completed}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {cycle.details?.averageRating?.toFixed(1) || '-'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <button
+                                onClick={() => toggleExpand(cycle.id)}
+                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                              >
+                                {expandedCycle === cycle.id ? (
+                                  <>
+                                    <FaChevronUp size={12} /> Hide Details
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaChevronDown size={12} /> View Details
+                                  </>
+                                )}
+                              </button>
+                            </td>
+                          </tr>
+                          {expandedCycle === cycle.id && (
+                            <tr>
+                              <td colSpan={8} className="px-6 py-4 bg-gray-50">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                  <div className="bg-white p-4 rounded shadow">
+                                    <h3 className="font-semibold mb-2">Submission Details</h3>
+                                    <div className="space-y-2">
+                                      <p><span className="font-medium">Forms Submitted:</span> {cycle.details?.formsSubmitted ?? '-'}</p>
+<p><span className="font-medium">Approved:</span> {cycle.details?.approved ?? '-'}</p>
+<p><span className="font-medium">Pending Approval:</span> {cycle.details?.pendingApproval ?? '-'}</p>
+<p><span className="font-medium">Needs Clarification:</span> {cycle.details?.clarifying ?? '-'}</p>
+</div>
+                                  </div>
+                                  <div className="bg-white p-4 rounded shadow">
+                                    <h3 className="font-semibold mb-2">Performance Metrics</h3>
+                                    <div className="space-y-2">
+                                      <p><span className="font-medium">Average Rating:</span> {cycle.details?.averageRating?.toFixed(1) ?? '-'}/5</p>
+<p><span className="font-medium">Completion Rate:</span> {Math.round((cycle.completed / cycle.participants) * 100)}%</p>
+                                      <p><span className="font-medium">Approval Rate:</span> {cycle.details?.formsSubmitted && cycle.details?.approved !== undefined 
+    ? Math.round((cycle.details.approved / cycle.details.formsSubmitted) * 100) 
+    : 0}%</p><p><span className="font-medium">Team Members:</span> {cycle.participants}</p>
+                                    </div>
+                                  </div>
+                                  <div className="bg-white p-4 rounded shadow">
+                                    <h3 className="font-semibold mb-2">Cycle Information</h3>
+                                    <div className="space-y-2">
+                                      <p><span className="font-medium">Manager:</span> {cycle.manager}</p>
+                                      <p><span className="font-medium">Due Date:</span> {cycle.dueDate}</p>
+                                      <p><span className="font-medium">Departments:</span> {cycle.details?.departments?.join(', ') ?? '-'}</p>
+<p><span className="font-medium">Status:</span> <span className={`capitalize ${cycle.status === 'active' ? 'text-blue-600' : 'text-green-600'}`}>{cycle.status}</span></p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       ))
                     ) : (
                       <tr>
