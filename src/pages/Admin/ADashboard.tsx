@@ -34,6 +34,8 @@ const AdminDashboard: React.FC = () => {
     approvers: [],
     isFinalApproval: false
   });
+  const [hikePercentage, setHikePercentage] = useState<number>(0);
+  const [showHikeInput, setShowHikeInput] = useState(false);
 
   // Static data for pending approvals
   const staticPendingApprovals: HikeForm[] = [
@@ -164,40 +166,151 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
+  // Mock completed assessment data for employee approvals
+  const mockCompletedAssessment = {
+    id: 1,
+    cycleId: 2,
+    cycleName: "Mid-term Review 2023",
+    employeeName: "John Doe",
+    position: "Senior Developer",
+    department: "Engineering",
+    manager: "Mr. Murugan",
+    submittedDate: "2023-08-10",
+    status: "pending",
+    overallRating: 4.2,
+    goals: [
+      {
+        title: "Improve code quality",
+        description: "Focus on writing cleaner, more maintainable code",
+        achievement: "Reduced bug reports by 25%",
+        employeeRating: 4,
+        managerRating: 4.5,
+        managerFeedback: "Significant improvement shown in code quality metrics."
+      },
+      {
+        title: "Learn new framework",
+        description: "Gain proficiency in React 18",
+        achievement: "Completed React course and implemented features",
+        employeeRating: 5,
+        managerRating: 5,
+        managerFeedback: "Excellent progress with React 18 adoption."
+      }
+    ],
+    projects: [
+      {
+        name: "Customer Portal Redesign",
+        description: "Redesign of the customer-facing portal",
+        impact: "Improved user satisfaction by 30%",
+        role: "Lead Frontend Developer",
+        employeeRating: 5,
+        managerRating: 5,
+        managerFeedback: "Excellent work leading the frontend development team."
+      },
+      {
+        name: "API Performance Optimization",
+        description: "Improved response times for critical APIs",
+        impact: "Reduced latency by 40%",
+        role: "Backend Developer",
+        employeeRating: 4,
+        managerRating: 4,
+        managerFeedback: "Good work on performance improvements."
+      }
+    ],
+    skills: [
+      {
+        name: "Quality of Work",
+        category: "Technical",
+        employeeRating: 4.5,
+        managerRating: 4.5,
+        managerFeedback: "Consistently delivers high-quality work with attention to detail."
+      },
+      {
+        name: "Technical Skills",
+        category: "Technical",
+        employeeRating: 4.0,
+        managerRating: 4.0,
+        managerFeedback: "Strong technical skills demonstrated across the stack."
+      },
+      {
+        name: "Communication",
+        category: "Soft Skills",
+        employeeRating: 3.5,
+        managerRating: 3.5,
+        managerFeedback: "Communicates effectively but could improve documentation."
+      }
+    ],
+    managerFeedback: "John has shown excellent technical skills and leadership qualities this cycle. His work on the customer portal redesign was particularly impressive. He has demonstrated strong problem-solving abilities and has been proactive in taking on additional responsibilities. There is room for improvement in documentation practices and mentoring junior team members more consistently.",
+    strengths: [
+      "Technical expertise",
+      "Leadership skills",
+      "Problem solving",
+      "Quick learner",
+      "Reliable and consistent"
+    ],
+    areasForImprovement: [
+      "Could improve documentation practices",
+      "Should mentor more junior team members",
+      "Could take more initiative in cross-team collaboration"
+    ],
+    hikeRecommendation: {
+      percentage: "12%",
+      justification: "Strong performance across all metrics with exceptional work on key projects. Demonstrated technical leadership and delivered significant business impact.",
+      status: "pending"
+    }
+  };
+
   const approvals: Approval[] = [
-    {
-      id: 101,
-      employeeName: "John Doe",
-      position: "Software Engineer",
-      manager: "Alice Smith",
-      currentSalary: 600000,
-      reviewType: "Annual",
+  {
+    id: 101,
+    employeeName: "John Doe",
+    position: "Software Engineer",
+    manager: "Alice Smith",
+    currentSalary: 600000,
+    reviewType: "Annual",
+    submittedDate: "2025-03-15",
+    rating: 4.5,
+    status: "pending",
+    hikePercentage: 0,
+    feedback: "",
+    completedAssessment: {
+      cycleName: "Annual Cycle",
       submittedDate: "2025-03-15",
-      rating: 4.5,
-      status: "pending",
-      hikePercentage: 0,
-      feedback: "",
+      department: "Engineering",
+      overallRating: 4.5,
       goals: [
         {
           title: "Improve Code Quality",
-          comments: "Consistently followed best practices.",
-          rating: 4
-        },
-        {
-          title: "Reduce Bugs",
-          comments: "Bug count reduced by 30%.",
-          rating: 5
+          description: "",
+          achievement: "",
+          employeeRating: 0,
+          managerRating: 4,
+          managerFeedback: "Consistently followed best practices."
         }
       ],
       projects: [
         {
-          title: "Migration to React",
-          comments: "Successfully migrated frontend to React.",
-          rating: 5
+          name: "Migration to React",
+          description: "",
+          role: "",
+          impact: "",
+          employeeRating: 0,
+          managerRating: 5,
+          managerFeedback: "Successfully migrated frontend to React."
         }
-      ]
+      ],
+      skills: [],
+      managerFeedback: "",
+      strengths: [],
+      areasForImprovement: [],
+      hikeRecommendation: {
+        percentage: "10%",
+        justification: "Great work.",
+        status: "pending"
+      }
     }
-  ];
+  }
+];
+
 
   const statusClasses: Record<FormStatus, string> = {
     draft: 'bg-yellow-100 text-yellow-800',
@@ -306,13 +419,48 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleViewApproval = (approval: Approval) => {
-    setSelectedApproval(approval);
+    setSelectedApproval({
+      ...approval,
+      completedAssessment: {
+        ...mockCompletedAssessment,
+        hikeRecommendation: {
+          ...mockCompletedAssessment.hikeRecommendation,
+          status: mockCompletedAssessment.hikeRecommendation?.status as 'pending' | 'approved' | 'clarifying'
+        }
+      }
+    });
   };
 
-  const handleApprove = (hikePercentage: number, feedback: string) => {
+  const handleApprove = () => {
     if (!selectedApproval) return;
+    
+    // Calculate new salary based on hike percentage
+    const newSalary = selectedApproval.currentSalary * (1 + (hikePercentage / 100));
+    
+    // Update the approval status and hike percentage
+    const updatedApproval = {
+      ...selectedApproval,
+      status: 'approved',
+      hikePercentage: hikePercentage,
+      feedback: `Approved with ${hikePercentage}% hike. New salary: ₹${newSalary.toLocaleString()}`,
+      completedAssessment: {
+        ...selectedApproval.completedAssessment,
+        hikeRecommendation: {
+          ...selectedApproval.completedAssessment?.hikeRecommendation,
+          percentage: `${hikePercentage}%`,
+          status: 'approved'
+        }
+      }
+    };
+    
+    // In a real app, you would send this to your backend
+    console.log('Approved with hike:', updatedApproval);
+    
+    // Show confirmation and reset state
+    alert(`Approved with ${hikePercentage}% hike! New salary: ₹${newSalary.toLocaleString()}`);
     setSelectedApproval(null);
-    alert(`Approved with ${hikePercentage}% hike!`);
+    setHikePercentage(0);
+    setShowHikeInput(false);
   };
 
   const handleRequestClarification = (feedback: string) => {
@@ -394,13 +542,13 @@ const AdminDashboard: React.FC = () => {
       case 'review-cycles':
         return (
           <div>
-            <h2 className="text-xl font-semibold mb-6">Performance Review Cycles</h2>
-            <HikeCycleList
-              cycles={hikeCycles}
-              expandedCycle={expandedCycle}
-              onManageClick={toggleExpand}
-            />
-          </div>
+  <h2 className="text-xl font-semibold mb-6">Performance Review Cycles</h2>
+  <HikeCycleList
+    cycles={hikeCycles}
+    expandedCycle={expandedCycle}
+    onManageClick={toggleExpand}
+  />
+</div>
         );
 
       case 'approvals':
@@ -502,12 +650,292 @@ const AdminDashboard: React.FC = () => {
         }
 
         return selectedApproval ? (
-          <ApprovalDetails
-            approval={selectedApproval}
-            onBack={() => setSelectedApproval(null)}
-            onApprove={handleApprove}
-            onRequestClarification={handleRequestClarification}
-          />
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-semibold">Performance Review: {selectedApproval.employeeName}</h2>
+                <p className="text-gray-600">{selectedApproval.position} • {selectedApproval.manager}</p>
+              </div>
+              <button
+                onClick={() => setSelectedApproval(null)}
+                className="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
+              >
+                Back to List
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-blue-600">Current Salary</p>
+                <p className="text-2xl font-bold">₹{selectedApproval.currentSalary.toLocaleString()}</p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <p className="text-sm text-green-600">Proposed Hike</p>
+                <p className="text-2xl font-bold">{selectedApproval.completedAssessment?.hikeRecommendation?.percentage || 'Pending'}</p>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <p className="text-sm text-purple-600">Overall Rating</p>
+                <p className="text-2xl font-bold">{selectedApproval.completedAssessment?.overallRating}/5</p>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              {/* Assessment Details */}
+              <div className="border-b pb-6">
+                <h3 className="text-lg font-semibold mb-4">Assessment Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Review Cycle</p>
+                    <p className="font-medium">{selectedApproval.completedAssessment?.cycleName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Submitted Date</p>
+                    <p className="font-medium">{selectedApproval.completedAssessment?.submittedDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Department</p>
+                    <p className="font-medium">{selectedApproval.completedAssessment?.department}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Status</p>
+                    <p className="font-medium capitalize">{selectedApproval.status}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Goals Assessment */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Goals Assessment</h3>
+                {selectedApproval.completedAssessment?.goals?.length ? (
+                  <div className="space-y-4">
+                    {selectedApproval.completedAssessment.goals.map((goal, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{goal.title}</h4>
+                            <p className="text-sm text-gray-600">{goal.description}</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <p className="text-xs text-gray-500">Employee</p>
+                              <span className="font-medium">{goal.employeeRating}/5</span>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-gray-500">Manager</p>
+                              <span className="font-medium">{goal.managerRating}/5</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <p className="text-sm font-medium">Achievements:</p>
+                          <p className="text-gray-700">{goal.achievement}</p>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">Manager Feedback:</p>
+                          <p className="text-gray-700">{goal.managerFeedback}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No goals data available</p>
+                )}
+              </div>
+
+              {/* Projects Assessment */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Projects Assessment</h3>
+                {selectedApproval.completedAssessment?.projects?.length ? (
+                  <div className="space-y-4">
+                    {selectedApproval.completedAssessment.projects.map((project, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{project.name}</h4>
+                            <p className="text-sm text-gray-600">{project.description}</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <p className="text-xs text-gray-500">Employee</p>
+                              <span className="font-medium">{project.employeeRating}/5</span>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-gray-500">Manager</p>
+                              <span className="font-medium">{project.managerRating}/5</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm font-medium">Your Role:</p>
+                            <p className="text-gray-700">{project.role}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Impact:</p>
+                            <p className="text-gray-700">{project.impact}</p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">Manager Feedback:</p>
+                          <p className="text-gray-700">{project.managerFeedback}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No projects data available</p>
+                )}
+              </div>
+
+              {/* Skills Assessment */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Skills Assessment</h3>
+                {selectedApproval.completedAssessment?.skills?.length ? (
+                  <div className="space-y-4">
+                    {selectedApproval.completedAssessment.skills.map((skill, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium">{skill.name}</h4>
+                            <p className="text-sm text-gray-600">{skill.category}</p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <p className="text-xs text-gray-500">Employee</p>
+                              <span className="font-medium">{skill.employeeRating}/5</span>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-gray-500">Manager</p>
+                              <span className="font-medium">{skill.managerRating}/5</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium">Manager Feedback:</p>
+                          <p className="text-gray-700">{skill.managerFeedback}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No skills data available</p>
+                )}
+              </div>
+
+              {/* Manager Feedback */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Manager's Overall Feedback</h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-700">{selectedApproval.completedAssessment?.managerFeedback}</p>
+                </div>
+              </div>
+
+              {/* Strengths and Areas for Improvement */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Strengths</h3>
+                  <ul className="list-disc pl-5 space-y-2">
+                    {selectedApproval.completedAssessment?.strengths?.map((strength, index) => (
+                      <li key={index}>{strength}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Areas for Improvement</h3>
+                  <ul className="list-disc pl-5 space-y-2">
+                    {selectedApproval.completedAssessment?.areasForImprovement?.map((area, index) => (
+                      <li key={index}>{area}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Approval Actions */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Approval Decision</h3>
+                <div className="space-y-4">
+                  {showHikeInput ? (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Hike Percentage (%)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="50"
+                          step="0.5"
+                          value={hikePercentage}
+                          onChange={(e) => setHikePercentage(Number(e.target.value))}
+                          className="border rounded px-3 py-2 w-full"
+                        />
+                        {hikePercentage > 0 && (
+                          <div className="mt-2 bg-blue-50 p-3 rounded">
+                            <p className="text-sm">
+                              New salary will be: ₹
+                              {(selectedApproval.currentSalary * (1 + (hikePercentage / 100))).toLocaleString()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Feedback (Optional)
+                        </label>
+                        <textarea
+                          className="border rounded px-3 py-2 w-full"
+                          rows={3}
+                          placeholder="Provide any additional feedback..."
+                        />
+                      </div>
+                      <div className="flex justify-end gap-4">
+                        <button
+                          onClick={() => setShowHikeInput(false)}
+                          className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleApprove}
+                          disabled={hikePercentage <= 0}
+                          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-green-400"
+                        >
+                          Confirm Approval
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Feedback (Optional)
+                        </label>
+                        <textarea
+                          className="border rounded px-3 py-2 w-full"
+                          rows={3}
+                          placeholder="Provide any additional feedback..."
+                        />
+                      </div>
+                      <div className="flex justify-end gap-4">
+                        <button
+                          onClick={() => handleRequestClarification('')}
+                          className="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600"
+                        >
+                          Request Clarification
+                        </button>
+                        <button
+                          onClick={() => setShowHikeInput(true)}
+                          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -709,19 +1137,20 @@ const AdminDashboard: React.FC = () => {
                                     <h3 className="font-semibold mb-2">Submission Details</h3>
                                     <div className="space-y-2">
                                       <p><span className="font-medium">Forms Submitted:</span> {cycle.details?.formsSubmitted ?? '-'}</p>
-<p><span className="font-medium">Approved:</span> {cycle.details?.approved ?? '-'}</p>
-<p><span className="font-medium">Pending Approval:</span> {cycle.details?.pendingApproval ?? '-'}</p>
-<p><span className="font-medium">Needs Clarification:</span> {cycle.details?.clarifying ?? '-'}</p>
-</div>
+                                      <p><span className="font-medium">Approved:</span> {cycle.details?.approved ?? '-'}</p>
+                                      <p><span className="font-medium">Pending Approval:</span> {cycle.details?.pendingApproval ?? '-'}</p>
+                                      <p><span className="font-medium">Needs Clarification:</span> {cycle.details?.clarifying ?? '-'}</p>
+                                    </div>
                                   </div>
                                   <div className="bg-white p-4 rounded shadow">
                                     <h3 className="font-semibold mb-2">Performance Metrics</h3>
                                     <div className="space-y-2">
                                       <p><span className="font-medium">Average Rating:</span> {cycle.details?.averageRating?.toFixed(1) ?? '-'}/5</p>
-<p><span className="font-medium">Completion Rate:</span> {Math.round((cycle.completed / cycle.participants) * 100)}%</p>
+                                      <p><span className="font-medium">Completion Rate:</span> {Math.round((cycle.completed / cycle.participants) * 100)}%</p>
                                       <p><span className="font-medium">Approval Rate:</span> {cycle.details?.formsSubmitted && cycle.details?.approved !== undefined 
-    ? Math.round((cycle.details.approved / cycle.details.formsSubmitted) * 100) 
-    : 0}%</p><p><span className="font-medium">Team Members:</span> {cycle.participants}</p>
+                                          ? Math.round((cycle.details.approved / cycle.details.formsSubmitted) * 100) 
+                                          : 0}%</p>
+                                      <p><span className="font-medium">Team Members:</span> {cycle.participants}</p>
                                     </div>
                                   </div>
                                   <div className="bg-white p-4 rounded shadow">
@@ -730,7 +1159,7 @@ const AdminDashboard: React.FC = () => {
                                       <p><span className="font-medium">Manager:</span> {cycle.manager}</p>
                                       <p><span className="font-medium">Due Date:</span> {cycle.dueDate}</p>
                                       <p><span className="font-medium">Departments:</span> {cycle.details?.departments?.join(', ') ?? '-'}</p>
-<p><span className="font-medium">Status:</span> <span className={`capitalize ${cycle.status === 'active' ? 'text-blue-600' : 'text-green-600'}`}>{cycle.status}</span></p>
+                                      <p><span className="font-medium">Status:</span> <span className={`capitalize ${cycle.status === 'active' ? 'text-blue-600' : 'text-green-600'}`}>{cycle.status}</span></p>
                                     </div>
                                   </div>
                                 </div>
@@ -779,7 +1208,7 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="mb-8 bg-white rounded-lg shadow p-6" style={{ height: 400 }}>
+            <div className="mb-8 bg-white rounded-lg shadow p-6 flex justify-center items-center h-auto min-h-[280px]">
               <PieChart
                 data={selectedPieData}
                 title={`${selectedCycle?.name} - Status Distribution`}

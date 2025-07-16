@@ -1,6 +1,6 @@
 // components/ApprovalDetails.tsx
 import React from 'react';
-import { Approval } from '../types/reviewTypes';
+import { Approval, Goal, Project } from '../types/reviewTypes';
 
 type ApprovalDetailsProps = {
   approval: Approval;
@@ -64,21 +64,29 @@ const ApprovalDetails: React.FC<ApprovalDetailsProps> = ({
         <div>
           <h3 className="font-semibold mb-3">Goal Assessments</h3>
           <div className="space-y-3">
-            {approval.goals.map((goal, index) => (
-              <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                <div className="flex justify-between">
-                  <div>
-                    <h4 className="font-medium">{goal.title}</h4>
-                    <p className="text-sm text-gray-600">{goal.comments}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      Rating: {goal.rating}/5
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {approval.completedAssessment?.goals?.length ? (
+  <div>
+    <h3 className="font-semibold mb-3">Goal Assessments</h3>
+    <div className="space-y-3">
+      {approval.completedAssessment?.goals?.map((goal: any, index: number) =>(
+        <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+          <div className="flex justify-between">
+            <div>
+              <h4 className="font-medium">{goal.title}</h4>
+              <p className="text-sm text-gray-600">{goal.managerFeedback || goal.managerComments}</p>
+            </div>
+            <div className="text-right">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                Rating: {goal.managerRating ?? '-'} / 5
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+) : null}
+
           </div>
         </div>
 
@@ -86,21 +94,29 @@ const ApprovalDetails: React.FC<ApprovalDetailsProps> = ({
         <div>
           <h3 className="font-semibold mb-3">Project Assessments</h3>
           <div className="space-y-3">
-            {approval.projects.map((project, index) => (
-              <div key={index} className="border-l-4 border-purple-500 pl-4 py-2">
-                <div className="flex justify-between">
-                  <div>
-                    <h4 className="font-medium">{project.title}</h4>
-                    <p className="text-sm text-gray-600">{project.comments}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                      Rating: {project.rating}/5
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {approval.completedAssessment?.projects?.length ? (
+  <div>
+    <h3 className="font-semibold mb-3">Project Assessments</h3>
+    <div className="space-y-3">
+      {approval.completedAssessment?.projects?.map((project: any, index: number) => (
+        <div key={index} className="border-l-4 border-purple-500 pl-4 py-2">
+          <div className="flex justify-between">
+            <div>
+              <h4 className="font-medium">{project.title}</h4>
+              <p className="text-sm text-gray-600">{project.managerFeedback || project.managerComments}</p>
+            </div>
+            <div className="text-right">
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                Rating: {project.managerRating ?? '-'} / 5
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+) : null}
+
           </div>
         </div>
 

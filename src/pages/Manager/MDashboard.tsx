@@ -4,30 +4,101 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import DashboardCard from '../../components/DashboardCard';
 import EmployeeReviewList from '../../components/EmployeeReviewList';
-import TeamPerformanceChart from '../../components/TeamPerformanceChart';
-import ProjectReview from '../../components/ProjectReview';
-import GoalReview from '../../components/GoalReview';
-import OverallReview from '../../components/OverallReview';
 import PieChart from '../../components/PieChart';
 import { FaFileCsv, FaFilter, FaSearch, FaChartBar, FaChartLine, FaChartPie, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { Review, SkillCategory, SkillQuestion } from '../../types/reviewTypes';
 import { CSVLink } from 'react-csv';
 
+
 interface RatingDropdownProps {
   value: number;
   onChange: (value: number) => void;
 }
+
 type RatingOption = {
   value: number;
   label: string;
+  definition: string;
 };
+
 const ratingOptions: RatingOption[] = [
-  { value: 1, label: "Poor" },
-  { value: 2, label: "Fair" },
-  { value: 3, label: "Good" },
-  { value: 4, label: "Very Good" },
-  { value: 5, label: "Excellent" }
+  { 
+    value: 1, 
+    label: "1 - Poor", 
+    definition: "Performance is consistently below expectations. Significant improvement is needed." 
+  },
+  { 
+    value: 2, 
+    label: "2 - Fair", 
+    definition: "Performance occasionally meets expectations but often falls short. Improvement is needed." 
+  },
+  { 
+    value: 3, 
+    label: "3 - Good", 
+    definition: "Performance meets expectations. Consistently delivers required results." 
+  },
+  { 
+    value: 4, 
+    label: "4 - Very Good", 
+    definition: "Performance frequently exceeds expectations. Delivers high quality results." 
+  },
+  { 
+    value: 5, 
+    label: "5 - Excellent", 
+    definition: "Performance consistently exceeds expectations. Exceptional quality and initiative." 
+  }
 ];
+
+const RatingDropdown: React.FC<RatingDropdownProps> = ({ value, onChange }) => {
+  const [showGuide, setShowGuide] = useState(false);
+  
+  return (
+    <div className="relative">
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <select 
+            className="border border-gray-300 rounded p-2 pr-8 appearance-none bg-white"
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+          >
+            {ratingOptions.map((option: RatingOption) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+        <button 
+          onClick={() => setShowGuide(!showGuide)}
+          className="text-gray-500 hover:text-gray-700 text-sm"
+          aria-label="Show rating guide"
+        >
+          {showGuide ? 'Hide Guide' : 'Show Guide'}
+        </button>
+      </div>
+      
+      {/* Enhanced Rating Guide */}
+      {showGuide && (
+        <div className="absolute z-10 mt-1 w-72 p-3 bg-white border border-gray-200 rounded-lg shadow-lg">
+          <h4 className="font-semibold mb-2 text-sm">Rating Scale Guide</h4>
+          <ul className="space-y-2 text-xs">
+            {ratingOptions.map((option) => (
+              <li key={option.value} className="flex flex-col">
+                <span className="font-medium">{option.label}</span>
+                <span className="text-gray-600">{option.definition}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface TeamReviewCycle {
   id: number;
@@ -47,6 +118,18 @@ interface TeamReviewCycle {
     pendingApproval: number;
     averageRating: number;
     departments: string[];
+  };
+  chartData: {
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+      backgroundColor: string[];
+      borderColor: string[];
+      borderWidth: number;
+      borderRadius: number;
+      barPercentage: number;
+    }[];
   };
 }
 
@@ -75,6 +158,7 @@ const ManagerDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedCycle, setExpandedCycle] = useState<number | null>(null);
+  const [selectedCycle, setSelectedCycle] = useState<number>(1);
 
   const stats = [
     { title: 'Team Members', value: 8, icon: '👥', trend: 'up' },
@@ -369,6 +453,47 @@ const ManagerDashboard: React.FC = () => {
         pendingApproval: 5,
         averageRating: 3.9,
         departments: ['Engineering']
+      },
+      chartData: {
+        labels: ['Jan', 'Feb', 'Mar'],
+        datasets: [
+          {
+            label: 'Technical Skills',
+            data: [3.8, 4.0, 4.1],
+            backgroundColor: ['#3b82f6'],
+            borderColor: ['#2563eb'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Communication',
+            data: [3.5, 3.6, 3.7],
+            backgroundColor: ['#10b981'],
+            borderColor: ['#059669'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Productivity',
+            data: [3.9, 4.0, 4.1],
+            backgroundColor: ['#f59e0b'],
+            borderColor: ['#d97706'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Teamwork',
+            data: [4.0, 4.1, 4.1],
+            backgroundColor: ['#8b5cf6'],
+            borderColor: ['#7c3aed'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          }
+        ]
       }
     },
     {
@@ -389,6 +514,47 @@ const ManagerDashboard: React.FC = () => {
         pendingApproval: 0,
         averageRating: 4.2,
         departments: ['Engineering']
+      },
+      chartData: {
+        labels: ['Jul', 'Aug', 'Sep'],
+        datasets: [
+          {
+            label: 'Technical Skills',
+            data: [4.0, 4.1, 4.2],
+            backgroundColor: ['#3b82f6'],
+            borderColor: ['#2563eb'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Communication',
+            data: [3.8, 3.9, 4.0],
+            backgroundColor: ['#10b981'],
+            borderColor: ['#059669'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Productivity',
+            data: [4.1, 4.2, 4.2],
+            backgroundColor: ['#f59e0b'],
+            borderColor: ['#d97706'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Teamwork',
+            data: [4.1, 4.2, 4.3],
+            backgroundColor: ['#8b5cf6'],
+            borderColor: ['#7c3aed'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          }
+        ]
       }
     },
     {
@@ -409,54 +575,51 @@ const ManagerDashboard: React.FC = () => {
         pendingApproval: 0,
         averageRating: 4.3,
         departments: ['Engineering']
+      },
+      chartData: {
+        labels: ['Jan', 'Feb', 'Mar'],
+        datasets: [
+          {
+            label: 'Technical Skills',
+            data: [4.2, 4.3, 4.4],
+            backgroundColor: ['#3b82f6'],
+            borderColor: ['#2563eb'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Communication',
+            data: [4.0, 4.1, 4.2],
+            backgroundColor: ['#10b981'],
+            borderColor: ['#059669'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Productivity',
+            data: [4.2, 4.3, 4.4],
+            backgroundColor: ['#f59e0b'],
+            borderColor: ['#d97706'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          },
+          {
+            label: 'Teamwork',
+            data: [4.3, 4.3, 4.4],
+            backgroundColor: ['#8b5cf6'],
+            borderColor: ['#7c3aed'],
+            borderWidth: 2,
+            borderRadius: 4,
+            barPercentage: 0.7,
+          }
+        ]
       }
     }
   ];
 
-  // Enhanced performance data for the chart
-  const performanceData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Technical Skills',
-        data: [3.8, 4.0, 4.1, 4.2, 4.3, 4.4],
-        backgroundColor: ['#3b82f6'],
-        borderColor: ['#2563eb'],
-        borderWidth: 2,
-        borderRadius: 4,
-        barPercentage: 0.7,
-      },
-      {
-        label: 'Communication',
-        data: [3.5, 3.6, 3.7, 3.8, 3.9, 4.0],
-        backgroundColor: ['#10b981'],
-        borderColor: ['#059669'],
-        borderWidth: 2,
-        borderRadius: 4,
-        barPercentage: 0.7,
-      },
-      {
-        label: 'Productivity',
-        data: [3.9, 4.0, 4.1, 4.2, 4.2, 4.3],
-        backgroundColor: ['#f59e0b'],
-        borderColor: ['#d97706'],
-        borderWidth: 2,
-        borderRadius: 4,
-        barPercentage: 0.7,
-      },
-      {
-        label: 'Teamwork',
-        data: [4.0, 4.1, 4.1, 4.2, 4.2, 4.3],
-        backgroundColor: ['#8b5cf6'],
-        borderColor: ['#7c3aed'],
-        borderWidth: 2,
-        borderRadius: 4,
-        barPercentage: 0.7,
-      }
-    ]
-  };
-
-  // Pie chart data for review status
   const pieChartData = [
     { name: 'Pending', value: pendingReviews.length, color: '#3B82F6' },
     { name: 'Completed', value: completedReviews.length, color: '#10B981' },
@@ -477,6 +640,10 @@ const ManagerDashboard: React.FC = () => {
     setIsViewingCompletedReview(isCompleted);
     setActiveReviewTab('goals');
     setOverallFeedback(review.overallFeedback || '');
+  };
+
+  const handleCycleChange = (cycleId: number) => {
+    setSelectedCycle(cycleId);
   };
 
   const handleSkillRatingChange = (reviewId: number, categoryIndex: number, questionIndex: number, value: number) => {
@@ -583,22 +750,129 @@ const ManagerDashboard: React.FC = () => {
     }
   };
 
-  const renderRatingDropdown = ({ value, onChange }: RatingDropdownProps) => (
-    <select 
-      className="border border-gray-300 rounded p-2"
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-    >
-      {ratingOptions.map((option: RatingOption) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  );
+  const handleGoalRatingChange = (reviewId: number, goalIndex: number, value: number) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        if (!review.goals) return review;
+
+        const updatedGoals = [...review.goals];
+        updatedGoals[goalIndex] = {
+          ...updatedGoals[goalIndex],
+          managerRating: value
+        };
+        return {
+          ...review,
+          goals: updatedGoals
+        };
+      }
+      return review;
+    });
+
+    setPendingReviews(updatedReviews);
+
+    if (selectedReview?.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const handleGoalCommentsChange = (reviewId: number, goalIndex: number, comments: string) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        if (!review.goals) return review;
+
+        const updatedGoals = [...review.goals];
+        updatedGoals[goalIndex] = {
+          ...updatedGoals[goalIndex],
+          managerComments: comments
+        };
+        return {
+          ...review,
+          goals: updatedGoals
+        };
+      }
+      return review;
+    });
+
+    setPendingReviews(updatedReviews);
+
+    if (selectedReview?.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const handleProjectRatingChange = (reviewId: number, projectIndex: number, value: number) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        if (!review.projects) return review;
+
+        const updatedProjects = [...review.projects];
+        updatedProjects[projectIndex] = {
+          ...updatedProjects[projectIndex],
+          managerRating: value
+        };
+        return {
+          ...review,
+          projects: updatedProjects
+        };
+      }
+      return review;
+    });
+
+    setPendingReviews(updatedReviews);
+
+    if (selectedReview?.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const handleProjectCommentsChange = (reviewId: number, projectIndex: number, comments: string) => {
+    const updatedReviews = pendingReviews.map(review => {
+      if (review.id === reviewId) {
+        if (!review.projects) return review;
+
+        const updatedProjects = [...review.projects];
+        updatedProjects[projectIndex] = {
+          ...updatedProjects[projectIndex],
+          managerComments: comments
+        };
+        return {
+          ...review,
+          projects: updatedProjects
+        };
+      }
+      return review;
+    });
+
+    setPendingReviews(updatedReviews);
+
+    if (selectedReview?.id === reviewId) {
+      const updatedSelectedReview = updatedReviews.find(r => r.id === reviewId);
+      if (updatedSelectedReview) {
+        setSelectedReview(updatedSelectedReview);
+      }
+    }
+  };
+
+  const renderRatingDisplay = (rating: number) => {
+    const option = ratingOptions.find(opt => opt.value === rating) || ratingOptions[2];
+    return (
+      <div className="flex items-center">
+        <span className="font-medium">{rating} - </span>
+        <span className="ml-1">{option.label.split('- ')[1]}</span>
+      </div>
+    );
+  };
 
   const renderReportsContent = () => {
-    // Filter cycles based on search and status
     const filteredCycles = teamReviewCycles.filter(cycle => {
       const matchesSearch = cycle.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           cycle.type.toLowerCase().includes(searchTerm.toLowerCase());
@@ -606,7 +880,6 @@ const ManagerDashboard: React.FC = () => {
       return matchesSearch && matchesStatus;
     });
 
-    // Prepare CSV data
     const csvData: ReportData[] = filteredCycles.map(cycle => ({
       Name: cycle.name,
       Type: cycle.type,
@@ -626,55 +899,48 @@ const ManagerDashboard: React.FC = () => {
       setExpandedCycle(expandedCycle === id ? null : id);
     };
 
-   return (
-  <div className="space-y-6">
-    {/* Title and Filters */}
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-      {/* Left: Heading */}
-      <h2 className="text-2xl font-semibold">Team Performance Reports</h2>
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <h2 className="text-2xl font-semibold">Team Performance Reports</h2>
 
-      {/* Right: Filters + Export */}
-      <div className="flex flex-col md:flex-row md:justify-end gap-4 w-full md:w-auto">
-        {/* Search */}
-        <div className="relative w-full md:w-64">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+          <div className="flex flex-col md:flex-row md:justify-end gap-4 w-full md:w-auto">
+            <div className="relative w-full md:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search cycles..."
+                className="pl-10 pr-4 py-2 border rounded-lg w-full"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="relative w-full md:w-48">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaFilter className="text-gray-400" />
+              </div>
+              <select
+                className="pl-10 pr-4 py-2 border rounded-lg appearance-none w-full"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            <CSVLink
+              data={csvData}
+              filename={`team-performance-reviews-${new Date().toISOString().slice(0, 10)}.csv`}
+              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 w-full md:w-auto"
+            >
+              <FaFileCsv /> Export CSV
+            </CSVLink>
           </div>
-          <input
-            type="text"
-            placeholder="Search cycles..."
-            className="pl-10 pr-4 py-2 border rounded-lg w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Status Filter */}
-        <div className="relative w-full md:w-48">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaFilter className="text-gray-400" />
-          </div>
-          <select
-            className="pl-10 pr-4 py-2 border rounded-lg appearance-none w-full"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
-
-        {/* Export CSV */}
-        <CSVLink
-          data={csvData}
-          filename={`team-performance-reviews-${new Date().toISOString().slice(0, 10)}.csv`}
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 w-full md:w-auto"
-        >
-          <FaFileCsv /> Export CSV
-        </CSVLink>
-      </div>
-
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -790,7 +1056,6 @@ const ManagerDashboard: React.FC = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold">Employee Reviews</h2>
-
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -820,7 +1085,9 @@ const ManagerDashboard: React.FC = () => {
       default: // Dashboard
         return (
           <>
-            <h1 className="text-2xl font-semibold mb-4">Manager Dashboard Overview</h1>
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-semibold">Performance Overview</h1>
+             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {stats.map((stat, index: number) => (
@@ -834,17 +1101,18 @@ const ManagerDashboard: React.FC = () => {
               ))}
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6 w-full mt-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FaChartPie className="text-blue-500" /> Review Status
-              </h3>
-              <div className="h-74 w-full">
-                <PieChart 
-                  data={pieChartData}
-                  title="Review Completion Status"
-                />
-              </div>
-            </div>
+            <div className="grid grid-cols-1 gap-6 mt-6">
+  <div className="bg-white rounded-lg shadow p-4 w-full h-80">
+    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+      <FaChartPie className="text-blue-500" /> Review Status
+    </h3>
+    <div className="w-full" style={{ height: 320 }}>
+      <PieChart data={pieChartData} />
+    </div>
+  </div>
+</div>
+
+
           </>
         );
     }
@@ -874,7 +1142,6 @@ const ManagerDashboard: React.FC = () => {
         </main>
       </div>
 
-      {/* Review Modal */}
       {selectedReview && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -883,12 +1150,6 @@ const ManagerDashboard: React.FC = () => {
                 <div>
                   <h2 className="text-2xl font-bold">{selectedReview.name}</h2>
                   <p className="text-gray-600">{selectedReview.position}</p>
-                  {isViewingCompletedReview && (
-                    <div className="mt-2">
-                      <p className="text-sm">Self Rating: {selectedReview.selfRating}/5</p>
-                      <p className="text-sm">Your Rating: {selectedReview.managerRating}/5</p>
-                    </div>
-                  )}
                 </div>
                 <button 
                   onClick={() => {
@@ -940,8 +1201,8 @@ const ManagerDashboard: React.FC = () => {
                           <p className="text-gray-700 mb-2"><strong>Description:</strong> {goal.description}</p>
                           <p className="text-gray-700 mb-2"><strong>Achievement:</strong> {goal.achievement}</p>
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm">Self Rating: {renderRatingDropdown({ value: goal.selfRating, onChange: () => {} })}</p>
-                            <p className="text-sm">Your Rating: {renderRatingDropdown({ value: goal.managerRating || 0, onChange: () => {} })}</p>
+                            <p className="text-sm">Self Rating: {renderRatingDisplay(goal.selfRating)}</p>
+                            <p className="text-sm">Your Rating: {renderRatingDisplay(goal.managerRating || 0)}</p>
                             <div className="bg-blue-50 p-3 rounded">
                               <p className="text-sm font-medium text-gray-700">Your Feedback:</p>
                               <p className="text-sm text-gray-600">{goal.managerComments}</p>
@@ -961,8 +1222,8 @@ const ManagerDashboard: React.FC = () => {
                           <p className="text-gray-700 mb-2"><strong>Description:</strong> {project.description}</p>
                           <p className="text-gray-700 mb-2"><strong>Impact:</strong> {project.impact}</p>
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm">Self Rating: {renderRatingDropdown({ value: project.selfRating, onChange: () => {} })}</p>
-                            <p className="text-sm">Your Rating: {renderRatingDropdown({ value: project.managerRating || 0, onChange: () => {} })}</p>
+                            <p className="text-sm">Self Rating: {renderRatingDisplay(project.selfRating)}</p>
+                            <p className="text-sm">Your Rating: {renderRatingDisplay(project.managerRating || 0)}</p>
                             <div className="bg-blue-50 p-3 rounded">
                               <p className="text-sm font-medium text-gray-700">Your Feedback:</p>
                               <p className="text-sm text-gray-600">{project.managerComments}</p>
@@ -986,11 +1247,11 @@ const ManagerDashboard: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                                   <div>
                                     <p className="text-sm font-medium text-gray-700 mb-1">Self Rating</p>
-                                    {renderRatingDropdown({ value: question.selfRating, onChange: () => {} })}
+                                    {renderRatingDisplay(question.selfRating)}
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium text-gray-700 mb-1">Your Rating</p>
-                                    {renderRatingDropdown({ value: question.managerRating || 0, onChange: () => {} })}
+                                    {renderRatingDisplay(question.managerRating || 0)}
                                   </div>
                                 </div>
                                 <div className="mb-3">
@@ -1014,9 +1275,15 @@ const ManagerDashboard: React.FC = () => {
                   )}
 
                   {activeReviewTab === 'overall' && (
-                    <div className="bg-gray-50 p-4 rounded">
-                      <h3 className="text-lg font-semibold mb-2">📝 Overall Feedback</h3>
-                      <p className="text-gray-700">{selectedReview.overallFeedback}</p>
+                    <div className="space-y-6">
+                      <div className="bg-gray-50 p-4 rounded">
+                        <h3 className="text-lg font-semibold mb-2">📝 Overall Feedback</h3>
+                        <div className="mb-4">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Overall Rating</p>
+                          {renderRatingDisplay(selectedReview.managerRating || 0)}
+                        </div>
+                        <p className="text-gray-700">{selectedReview.overallFeedback}</p>
+                      </div>
                     </div>
                   )}
                 </>
@@ -1050,28 +1317,99 @@ const ManagerDashboard: React.FC = () => {
                   </div>
 
                   {activeReviewTab === 'goals' && (
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                       {selectedReview.goals?.map((goal, index: number) => (
-                        <GoalReview 
-                          key={index} 
-                          goal={goal} 
-                          renderRatingDropdown={renderRatingDropdown}
-                          isViewOnly={false}
-                        />
+                        <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
+                          <h3 className="text-lg font-semibold mb-3">🎯 {goal.title}</h3>
+                          <p className="text-gray-700 mb-3"><strong>Description:</strong> {goal.description}</p>
+                          <p className="text-gray-700 mb-3"><strong>Achievement:</strong> {goal.achievement}</p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="block text-sm text-gray-500 mb-1">Employee Self Rating</label>
+                              {renderRatingDisplay(goal.selfRating)}
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-500 mb-1">Your Rating</label>
+                              <RatingDropdown
+                                value={goal.managerRating || 0}
+                                onChange={(value) => handleGoalRatingChange(selectedReview.id, index, value)}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-500 mb-1">Your Comments</label>
+                            <textarea
+                              className="w-full p-2 border border-gray-300 rounded"
+                              rows={3}
+                              placeholder="Provide feedback on this goal"
+                              value={goal.managerComments || ''}
+                              onChange={(e) => handleGoalCommentsChange(selectedReview.id, index, e.target.value)}
+                            ></textarea>
+                          </div>
+                        </div>
                       ))}
+                      <div className="flex justify-end">
+                        <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          onClick={() => setActiveReviewTab('projects')}
+                        >
+                          Next: Projects Review
+                        </button>
+                      </div>
                     </div>
                   )}
 
                   {activeReviewTab === 'projects' && (
-                    <div className="space-y-8">
+                    <div className="space-y-6">
                       {selectedReview.projects?.map((project, index: number) => (
-                        <ProjectReview 
-                          key={index} 
-                          project={project} 
-                          renderRatingDropdown={renderRatingDropdown}
-                          isViewOnly={false}
-                        />
+                        <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
+                          <h3 className="text-lg font-semibold mb-3">📂 {project.title}</h3>
+                          <p className="text-gray-600 mb-2">Role: {project.role}</p>
+                          <p className="text-gray-700 mb-3"><strong>Description:</strong> {project.description}</p>
+                          <p className="text-gray-700 mb-3"><strong>Impact:</strong> {project.impact}</p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <label className="block text-sm text-gray-500 mb-1">Employee Self Rating</label>
+                              {renderRatingDisplay(project.selfRating)}
+                            </div>
+                            <div>
+                              <label className="block text-sm text-gray-500 mb-1">Your Rating</label>
+                              <RatingDropdown
+                                value={project.managerRating || 0}
+                                onChange={(value) => handleProjectRatingChange(selectedReview.id, index, value)}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-500 mb-1">Your Comments</label>
+                            <textarea
+                              className="w-full p-2 border border-gray-300 rounded"
+                              rows={3}
+                              placeholder="Provide feedback on this project"
+                              value={project.managerComments || ''}
+                              onChange={(e) => handleProjectCommentsChange(selectedReview.id, index, e.target.value)}
+                            ></textarea>
+                          </div>
+                        </div>
                       ))}
+                      <div className="flex justify-between">
+                        <button
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                          onClick={() => setActiveReviewTab('goals')}
+                        >
+                          Back to Goals
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          onClick={() => setActiveReviewTab('skills')}
+                        >
+                          Next: Skills Review
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -1088,22 +1426,19 @@ const ManagerDashboard: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                   <div>
                                     <label className="block text-sm text-gray-500 mb-1">Employee Self Rating</label>
-                                    {renderRatingDropdown({
-                                      value: question.selfRating,
-                                      onChange: () => {}
-                                    })}
+                                    {renderRatingDisplay(question.selfRating)}
                                   </div>
                                   <div>
                                     <label className="block text-sm text-gray-500 mb-1">Your Rating</label>
-                                    {renderRatingDropdown({
-                                      value: question.managerRating || 0,
-                                      onChange: (value) => handleSkillRatingChange(
+                                    <RatingDropdown
+                                      value={question.managerRating || 0}
+                                      onChange={(value) => handleSkillRatingChange(
                                         selectedReview.id,
                                         categoryIndex,
                                         questionIndex,
                                         value
-                                      )
-                                    })}
+                                      )}
+                                    />
                                   </div>
                                 </div>
                                 <div className="mb-4">
@@ -1145,52 +1480,91 @@ const ManagerDashboard: React.FC = () => {
                           </div>
                         </div>
                       ))}
+                      <div className="flex justify-between">
+                        <button
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                          onClick={() => setActiveReviewTab('projects')}
+                        >
+                          Back to Projects
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          onClick={() => setActiveReviewTab('overall')}
+                        >
+                          Next: Overall Feedback
+                        </button>
+                      </div>
                     </div>
                   )}
 
                   {activeReviewTab === 'overall' && (
-                    <OverallReview 
-                      employee={{
-                        name: selectedReview.name,
-                        position: selectedReview.position
-                      }} 
-                      renderRatingDropdown={renderRatingDropdown}
-                      overallFeedback={overallFeedback}
-                      onFeedbackChange={(value) => setOverallFeedback(value)}
-                      isViewOnly={false}
-                    />
+                    <div className="space-y-6">
+                      <div className="bg-gray-50 p-4 rounded">
+                        <h3 className="text-lg font-semibold mb-3">📝 Overall Feedback for {selectedReview.name}</h3>
+                        <div className="mb-4">
+                          <label className="block text-sm text-gray-500 mb-1">Your Overall Rating</label>
+                          <RatingDropdown
+                            value={selectedReview.managerRating || 0}
+                            onChange={(value) => {
+                              const updatedReview = {
+                                ...selectedReview,
+                                managerRating: value
+                              };
+                              setSelectedReview(updatedReview);
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-500 mb-1">Your Overall Feedback</label>
+                          <textarea
+                            className="w-full p-2 border border-gray-300 rounded"
+                            rows={5}
+                            placeholder="Provide overall feedback for this employee's performance"
+                            value={overallFeedback}
+                            onChange={(e) => setOverallFeedback(e.target.value)}
+                          ></textarea>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <button
+                          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                          onClick={() => setActiveReviewTab('skills')}
+                        >
+                          Back to Skills
+                        </button>
+                        <div className="flex gap-4">
+                          <button 
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                            onClick={() => {
+                              setSelectedReview(null);
+                              setIsViewingCompletedReview(false);
+                            }}
+                          >
+                            Cancel
+                          </button>
+                          <button 
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            onClick={() => {
+                              // Save the review and mark as completed
+                              const updatedPending = pendingReviews.filter(r => r.id !== selectedReview.id);
+                              const updatedCompleted = [...completedReviews, {
+                                ...selectedReview,
+                                managerRating: selectedReview.managerRating || calculateOverallRating(selectedReview),
+                                overallFeedback
+                              }];
+                              
+                              setPendingReviews(updatedPending);
+                              setCompletedReviews(updatedCompleted);
+                              setSelectedReview(null);
+                              setIsViewingCompletedReview(false);
+                            }}
+                          >
+                            Complete Review
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   )}
-
-                  <div className="flex justify-end gap-4 mt-8">
-                    <button 
-                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
-                      onClick={() => {
-                        setSelectedReview(null);
-                        setIsViewingCompletedReview(false);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                      onClick={() => {
-                        // Save the review and mark as completed
-                        const updatedPending = pendingReviews.filter(r => r.id !== selectedReview.id);
-                        const updatedCompleted = [...completedReviews, {
-                          ...selectedReview,
-                          managerRating: calculateOverallRating(selectedReview),
-                          overallFeedback
-                        }];
-                        
-                        setPendingReviews(updatedPending);
-                        setCompletedReviews(updatedCompleted);
-                        setSelectedReview(null);
-                        setIsViewingCompletedReview(false);
-                      }}
-                    >
-                      Complete Review
-                    </button>
-                  </div>
                 </>
               )}
             </div>
@@ -1201,7 +1575,6 @@ const ManagerDashboard: React.FC = () => {
   );
 };
 
-// Helper function to calculate overall rating
 function calculateOverallRating(review: Review): number {
   let total = 0;
   let count = 0;

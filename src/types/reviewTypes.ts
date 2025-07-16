@@ -40,7 +40,21 @@ export interface SkillCategory {
   description?: string;
   questions: SkillQuestion[];
 }
+// types/chartTypes.ts
+export interface BarChartDataset {
+  label: string;
+  data: number[];
+  backgroundColor: string[];
+  borderColor: string[];
+  borderWidth: number;
+  borderRadius: number;
+  barPercentage: number;
+}
 
+export interface BarChartData {
+  labels: string[];
+  datasets: BarChartDataset[];
+}
 /* Review Core Types */
 export interface Review {
   id: number;
@@ -56,6 +70,7 @@ export interface Review {
   completedDate?: string;
   overallFeedback?: string;
   skills?: SkillCategory[];
+  managerOverallRating?: number;  // add this line
 }
 export interface HikeRecommendation {
   percentage: string;
@@ -201,7 +216,7 @@ export interface Milestone {
 }
 
 // types/reviewTypes.ts
-export type Approval = {
+export interface Approval {
   id: number;
   employeeName: string;
   position: string;
@@ -213,17 +228,46 @@ export type Approval = {
   rating: number;
   hikePercentage?: number;
   feedback?: string;
-  goals: {
-    title: string;
-    rating: number;
-    comments: string;
-  }[];
-  projects: {
-    title: string;
-    rating: number;
-    comments: string;
-  }[];
-};
+  completedAssessment?: {
+    cycleName: string;
+    submittedDate: string;
+    department: string;
+    overallRating: number;
+    goals: {
+      title: string;
+      description: string;
+      employeeRating: number;
+      managerRating: number;
+      achievement: string;
+      managerFeedback: string;
+    }[];
+    projects: {
+      name: string;
+      description: string;
+      employeeRating: number;
+      managerRating: number;
+      role: string;
+      impact: string;
+      managerFeedback: string;
+    }[];
+    skills: {
+      name: string;
+      category: string;
+      employeeRating: number;
+      managerRating: number;
+      managerFeedback: string;
+    }[];
+    managerFeedback: string;
+    strengths: string[];
+    areasForImprovement: string[];
+    hikeRecommendation?: {
+      percentage: string;
+      justification: string;
+      status: 'approved' | 'pending' | 'clarifying';
+    };
+  };
+}
+
 export interface FormApproval {
   id: number;
   title: string;

@@ -179,25 +179,42 @@ const HRDashboard: React.FC = () => {
       status: "pending",
       hikePercentage: 0,
       feedback: "",
-      goals: [
-        {
-          title: "Improve Code Quality",
-          comments: "Consistently followed best practices.",
-          rating: 4
-        },
-        {
-          title: "Reduce Bugs",
-          comments: "Bug count reduced by 30%.",
-          rating: 5
+      completedAssessment: {
+        cycleName: "Annual Cycle",
+        submittedDate: "2025-03-15",
+        department: "Engineering",
+        overallRating: 4.5,
+        goals: [
+          {
+            title: "Improve Code Quality",
+            description: "",
+            achievement: "",
+            employeeRating: 0,
+            managerRating: 4,
+            managerFeedback: "Consistently followed best practices."
+          }
+        ],
+        projects: [
+          {
+            name: "Migration to React",
+            description: "",
+            role: "",
+            impact: "",
+            employeeRating: 0,
+            managerRating: 5,
+            managerFeedback: "Successfully migrated frontend to React."
+          }
+        ],
+        skills: [],
+        managerFeedback: "",
+        strengths: [],
+        areasForImprovement: [],
+        hikeRecommendation: {
+          percentage: "10%",
+          justification: "Great work.",
+          status: "pending"
         }
-      ],
-      projects: [
-        {
-          title: "Migration to React",
-          comments: "Successfully migrated frontend to React.",
-          rating: 5
-        }
-      ]
+      }
     }
   ];
 
