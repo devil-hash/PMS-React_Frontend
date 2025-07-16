@@ -34,8 +34,6 @@ const AdminDashboard: React.FC = () => {
     approvers: [],
     isFinalApproval: false
   });
-  const [hikePercentage, setHikePercentage] = useState<number>(0);
-  const [showHikeInput, setShowHikeInput] = useState(false);
 
   // Static data for pending approvals
   const staticPendingApprovals: HikeForm[] = [
@@ -419,48 +417,24 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleViewApproval = (approval: Approval) => {
+    // Set the selected approval with the mock completed assessment data
     setSelectedApproval({
-      ...approval,
-      completedAssessment: {
-        ...mockCompletedAssessment,
-        hikeRecommendation: {
-          ...mockCompletedAssessment.hikeRecommendation,
-          status: mockCompletedAssessment.hikeRecommendation?.status as 'pending' | 'approved' | 'clarifying'
-        }
-      }
-    });
+  ...approval,
+  completedAssessment: {
+    ...mockCompletedAssessment,
+    hikeRecommendation: {
+      ...mockCompletedAssessment.hikeRecommendation,
+      status: mockCompletedAssessment.hikeRecommendation?.status as 'pending' | 'approved' | 'clarifying'
+    }
+  }
+});
+
   };
 
-  const handleApprove = () => {
+  const handleApprove = (hikePercentage: number, feedback: string) => {
     if (!selectedApproval) return;
-    
-    // Calculate new salary based on hike percentage
-    const newSalary = selectedApproval.currentSalary * (1 + (hikePercentage / 100));
-    
-    // Update the approval status and hike percentage
-    const updatedApproval = {
-      ...selectedApproval,
-      status: 'approved',
-      hikePercentage: hikePercentage,
-      feedback: `Approved with ${hikePercentage}% hike. New salary: ₹${newSalary.toLocaleString()}`,
-      completedAssessment: {
-        ...selectedApproval.completedAssessment,
-        hikeRecommendation: {
-          ...selectedApproval.completedAssessment?.hikeRecommendation,
-          percentage: `${hikePercentage}%`,
-          status: 'approved'
-        }
-      }
-    };
-    
-    // In a real app, you would send this to your backend
-    console.log('Approved with hike:', updatedApproval);
-    
-    // Show confirmation and reset state
-    alert(`Approved with ${hikePercentage}% hike! New salary: ₹${newSalary.toLocaleString()}`);
     setSelectedApproval(null);
-    setHikePercentage(0);
-    setShowHikeInput(false);
+    alert(`Approved with ${hikePercentage}% hike!`);
   };
 
   const handleRequestClarification = (feedback: string) => {
@@ -542,13 +516,13 @@ const AdminDashboard: React.FC = () => {
       case 'review-cycles':
         return (
           <div>
-  <h2 className="text-xl font-semibold mb-6">Performance Review Cycles</h2>
-  <HikeCycleList
-    cycles={hikeCycles}
-    expandedCycle={expandedCycle}
-    onManageClick={toggleExpand}
-  />
-</div>
+            <h2 className="text-xl font-semibold mb-6">Performance Review Cycles</h2>
+            <HikeCycleList
+              cycles={hikeCycles}
+              expandedCycle={expandedCycle}
+              onManageClick={toggleExpand}
+            />
+          </div>
         );
 
       case 'approvals':
@@ -849,89 +823,34 @@ const AdminDashboard: React.FC = () => {
                   </ul>
                 </div>
               </div>
-
               {/* Approval Actions */}
               <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Approval Decision</h3>
                 <div className="space-y-4">
-                  {showHikeInput ? (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Hike Percentage (%)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="50"
-                          step="0.5"
-                          value={hikePercentage}
-                          onChange={(e) => setHikePercentage(Number(e.target.value))}
-                          className="border rounded px-3 py-2 w-full"
-                        />
-                        {hikePercentage > 0 && (
-                          <div className="mt-2 bg-blue-50 p-3 rounded">
-                            <p className="text-sm">
-                              New salary will be: ₹
-                              {(selectedApproval.currentSalary * (1 + (hikePercentage / 100))).toLocaleString()}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Feedback (Optional)
-                        </label>
-                        <textarea
-                          className="border rounded px-3 py-2 w-full"
-                          rows={3}
-                          placeholder="Provide any additional feedback..."
-                        />
-                      </div>
-                      <div className="flex justify-end gap-4">
-                        <button
-                          onClick={() => setShowHikeInput(false)}
-                          className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleApprove}
-                          disabled={hikePercentage <= 0}
-                          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:bg-green-400"
-                        >
-                          Confirm Approval
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Feedback (Optional)
-                        </label>
-                        <textarea
-                          className="border rounded px-3 py-2 w-full"
-                          rows={3}
-                          placeholder="Provide any additional feedback..."
-                        />
-                      </div>
-                      <div className="flex justify-end gap-4">
-                        <button
-                          onClick={() => handleRequestClarification('')}
-                          className="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600"
-                        >
-                          Request Clarification
-                        </button>
-                        <button
-                          onClick={() => setShowHikeInput(true)}
-                          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Feedback (Optional)
+                    </label>
+                    <textarea
+                      className="border rounded px-3 py-2 w-full"
+                      rows={3}
+                      placeholder="Provide any additional feedback..."
+                    />
+                  </div>
+                  <div className="flex justify-end gap-4">
+                    <button
+                      onClick={() => handleRequestClarification('')}
+                      className="bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600"
+                    >
+                      Request Clarification
+                    </button>
+                    <button
+                      onClick={() => handleApprove(12, '')}
+                      className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
