@@ -1,4 +1,3 @@
-// src/components/LoginForm.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,33 +7,62 @@ const LoginForm: React.FC = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Static credentials
-  const validCredentials = [
-    { username: 'admin', password: 'admin123', role: 'admin' },
-    { username: 'manager', password: 'manager123', role: 'manager' },
-    { username: 'employee', password: 'employee123', role: 'employee' },
-    { username: 'hr', password: 'hr123', role: 'hr' }
-  ];
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const user = validCredentials.find(
-      cred => cred.username === username && cred.password === password
-    );
+    try {
+      const response = await fetch('https://localhost:7000/api/Auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: username, password })
+      });
 
-    if (user) {
-      localStorage.setItem('userRole', user.role);
-      navigate(`/${user.role}`);
-    } else {
-      setError('Invalid username or password');
+      if (!response.ok) {
+        throw new Error('Invalid username or password');
+      }
+
+     const data = await response.json();
+const { role, department } = data;
+
+// ✅ Save full user data
+localStorage.setItem("loggedInUser", JSON.stringify(data));
+
+let normalizedRole = '';
+if (role.toLowerCase().includes('admin')) {
+  normalizedRole = 'admin';
+} else if (role.toLowerCase().includes('manager')) {
+  normalizedRole = 'manager';
+} else if (role.toLowerCase().includes('hr')) {
+  normalizedRole = 'hr';
+} else {
+  normalizedRole = 'employee';
+}
+
+localStorage.setItem('userRole', normalizedRole);
+localStorage.setItem('userDepartment', department.toLowerCase());
+
+      // Redirect based on normalized role and department
+      if (normalizedRole === 'admin') {
+        navigate('/admin');
+      } else if (department.toLowerCase() === 'human resource') {
+        navigate('/hr');
+      } else if (normalizedRole === 'manager') {
+        navigate('/manager');
+      } else {
+        navigate('/employee');
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
     }
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-      <h2 className="text-xl font-semibold mb-4">Login with Microsoft</h2>
+      <h2 className="text-xl font-semibold mb-4">Login</h2>
       <form onSubmit={handleLogin}>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">

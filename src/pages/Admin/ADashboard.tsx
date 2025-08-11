@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import DashboardCard from '../../components/DashboardCard';
@@ -11,12 +11,17 @@ import { FaFileCsv, FaFilter, FaSearch, FaChartBar, FaChartLine, FaChartPie, FaC
 import { CSVLink } from 'react-csv';
 import { HikeCycle, DashboardStat, Approval } from '../../types/reviewTypes';
 import { v4 as uuidv4 } from 'uuid';
-import { HikeForm, HikeFormField, ApprovalLevel, FormStatus, HikeFormFieldType } from '../../types/reviewTypes';
+import { HikeForm, HikeFormField, ApprovalLevel, HikeFormFieldType } from '../../types/reviewTypes';
+import { HikeCycleForm } from '../../components/HikeForm';
+export type FormStatus = 'pending_approval' | 'published';
+
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "forms" | "review-cycles" | "reports" | "approvals" | "settings" | "users" | "templates" | "performance-review" |"assessments"| "reviews"
   >("dashboard");
+
+const [formToReject, setFormToReject] = useState<number | null>(null);
 
   const [showNewForm, setShowNewForm] = useState(false);
   const [selectedCycleId, setSelectedCycleId] = useState<number>(1);
@@ -25,8 +30,8 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [rejectReason, setRejectReason] = useState('');
-  const [formToReject, setFormToReject] = useState<string | null>(null);
-  const [activeForm, setActiveForm] = useState<HikeForm | null>(null);
+const [formToEdit, setFormToEdit] = useState<HikeCycleForm | null>(null);
+
   const [isEditing, setIsEditing] = useState(false);
   const [newFieldType, setNewFieldType] = useState<HikeFormFieldType>('text');
   const [newApprovalLevel, setNewApprovalLevel] = useState<Omit<ApprovalLevel, 'level'>>({
@@ -34,83 +39,10 @@ const AdminDashboard: React.FC = () => {
     approvers: [],
     isFinalApproval: false
   });
-
-  // Static data for pending approvals
-  const staticPendingApprovals: HikeForm[] = [
-    {
-      id: uuidv4(),
-      title: '2023 Annual Performance Review',
-      description: 'Form for annual employee performance evaluations',
-      fields: [
-        { id: uuidv4(), label: 'Cycle Name', type: 'text', required: true },
-        { id: uuidv4(), label: 'Cycle Deadline', type: 'Date', required: true },
-        { id: uuidv4(), label: 'Goal Section', type: 'textarea', required: true },
-        { id: uuidv4(), label: 'Project Section', type: 'textarea', required: true },
-        { id: uuidv4(), label: 'Communication', type: 'number', required: true, min: 1, max: 5 },
-        { id: uuidv4(), label: 'Team Work', type: 'number', required: true, min: 1, max: 5 },
-        { id: uuidv4(), label: 'Behaviour', type: 'number', required: true, min: 1, max: 5 },
-        { id: uuidv4(), label: 'Upload Document', type: 'file', required: true, min: 1, max: 5 },
-      ],
-      approvalLevels: [
-        {
-          level: 1,
-          title: 'Manager Review',
-          approvers: ['John Doe', 'Jane Smith'],
-          isFinalApproval: false
-        },
-        {
-          level: 2,
-          title: 'Manager Head Review',
-          approvers: ['Managing HIgher Officials'],
-          isFinalApproval: false
-        },
-        {
-          level: 3,
-          title: 'HR Approval',
-          approvers: ['HR Department'],
-          isFinalApproval: true
-        }
-      ],
-      status: 'pending_approval',
-      createdAt: '2023-01-15T10:30:00Z',
-      updatedAt: '2023-01-15T10:30:00Z'
-    },
-    {
-      id: uuidv4(),
-      title: 'Q3 Promotion Cycle',
-      description: 'Form for promotion recommendations and approvals',
-      fields: [
-        { id: uuidv4(), label: 'Current Position', type: 'text', required: true },
-        { id: uuidv4(), label: 'Recommended Position', type: 'text', required: true },
-        { id: uuidv4(), label: 'Justification', type: 'textarea', required: true },
-        { id: uuidv4(), label: 'Salary Adjustment %', type: 'number', required: false, min: 0, max: 50 }
-      ],
-      approvalLevels: [
-        {
-          level: 1,
-          title: 'Department Head',
-          approvers: ['Department Heads'],
-          isFinalApproval: false
-        },
-        {
-          level: 2,
-          title: 'Compensation Committee',
-          approvers: ['Comp Team'],
-          isFinalApproval: false
-        },
-        {
-          level: 3,
-          title: 'HR Final Approval',
-          approvers: ['HR Director'],
-          isFinalApproval: true
-        }
-      ],
-      status: 'pending_approval',
-      createdAt: '2023-06-20T14:15:00Z',
-      updatedAt: '2023-06-20T14:15:00Z'
-    }
-  ];
-
+  const userDepartment = "Human Resource"; // or get from auth/user context
+const userRole = "Admin";
+const [pendingApprovals, setPendingApprovals] = useState<HikeCycleForm[]>([]);
+const [activeForm, setActiveForm] = useState<HikeCycleForm | null>(null);
   // Sample data
   const existingForms = [
     { id: 1, name: 'Annual Review 2024', createdBy: 'Admin', createdOn: '2024-01-10' },
@@ -200,10 +132,10 @@ const AdminDashboard: React.FC = () => {
   ];
 
   const statusClasses: Record<FormStatus, string> = {
-    draft: 'bg-yellow-100 text-yellow-800',
+ 
     pending_approval: 'bg-blue-100 text-blue-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-gray-100 text-gray-800'
+    published: 'bg-green-100 text-green-800',
+  
   };
 
   // Enhanced analytics data
@@ -298,12 +230,13 @@ const AdminDashboard: React.FC = () => {
     { name: 'Clarifying', value: selectedCycle.details.clarifying },
     { name: 'Pending', value: selectedCycle.details.pendingApproval }
   ] : [];
-
-  const handlePublish = (data: any) => {
-    console.log('Published New Form:', data);
-    setShowNewForm(false);
-    setActiveTab('forms');
-  };
+  const handlePublish = (data: HikeCycleForm) => {
+  console.log('Form Published/Updated:', data);
+  setShowNewForm(false);
+  setActiveForm(null); // Clear activeForm after publishing/updating
+  setActiveTab('forms');
+  // ... (rest of the function)
+};
 
   const handleViewApproval = (approval: Approval) => {
     setSelectedApproval(approval);
@@ -321,7 +254,7 @@ const AdminDashboard: React.FC = () => {
     alert('Clarification requested!');
   };
 
-  const handleRejectClick = (formId: string) => {
+  const handleRejectClick = (formId: number) => {
     setFormToReject(formId);
   };
 
@@ -335,43 +268,102 @@ const AdminDashboard: React.FC = () => {
     setExpandedCycle(expandedCycle === id ? null : id);
   };
 
-  const handleApproveHikeForm = (formId: string) => {
-    const approvedForm = staticPendingApprovals.find(form => form.id === formId);
-    if (approvedForm) {
-      const updatedForm = { ...approvedForm, status: 'approved' };
-      alert(`Form "${updatedForm.title}" approved successfully!`);
-    }
-    setActiveForm(null);
-  };
+const handleEditForm = () => {
+  if (activeForm) {
+    setShowNewForm(true); // This tells the renderContent to show the form
+    // No need to setFormToEdit, as NewHikeCycleForm will now use activeForm as initialData
+  }
+};
 
-  const handleRejectHikeForm = (formId: string) => {
-    if (!rejectReason) {
-      alert('Please provide a reason for rejection');
-      return;
-    }
-    const rejectedForm = staticPendingApprovals.find(form => form.id === formId);
-    if (rejectedForm) {
-      alert(`Form "${rejectedForm.title}" rejected with reason: ${rejectReason}`);
-    }
+const handleApproveHikeForm = async (formId: number) => {
+  try {
+    await fetch(`https://localhost:7000/api/HikeCycle/approve/${formId}`, { method: 'POST' });
+    alert('Form approved successfully!');
+    setPendingApprovals(prev => prev.filter(form => form.id !== formId));
+    setActiveForm(null);
+  } catch (error) {
+    alert('Failed to approve form');
+  }
+};
+
+
+const handleRejectHikeForm = async (formId: number) => {
+  if (!rejectReason) {
+    alert('Please provide a reason for rejection');
+    return;
+  }
+
+  try {
+    await fetch(`/api/HikeForm/reject/${formId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: rejectReason }),
+    });
+
+    alert('Form rejected successfully!');
+    setPendingApprovals(prev => prev.filter(form => form.id !== formId));
     setActiveForm(null);
     setRejectReason('');
     setFormToReject(null);
+  } catch (error) {
+    alert('Failed to reject form');
+  }
+};
+
+
+useEffect(() => {
+  const fetchPendingApprovals = async () => {
+    try {
+      const response = await fetch('https://localhost:7000/api/HikeCycle/pending');
+      const data = await response.json();
+
+      // Map the cycleName to title to match the expected HikeForm type
+      const mappedForms = data.map((item: any) => ({
+        ...item,
+        title: item.cycleName
+      }));
+
+      setPendingApprovals(mappedForms);
+    } catch (error) {
+      console.error('Failed to fetch pending hike forms:', error);
+    }
   };
 
+  fetchPendingApprovals();
+}, []);
+
+useEffect(() => {
+  setShowNewForm(false);
+  setFormToEdit(null);
+  setActiveForm(null); // Also reset activeForm when switching tabs
+}, [activeTab]);
   const renderContent = () => {
+    
+ if (showNewForm) { // No need for formToEdit || here if we're only using showNewForm
+return (
+ <NewHikeCycleForm
+ onCancel={() => {
+ setShowNewForm(false);
+ setActiveForm(null); // Clear activeForm if cancelled
+}}
+onPublish={handlePublish}
+userDepartment={userDepartment}
+ userRole={userRole}
+ initialData={activeForm} // <--- THIS IS THE KEY CHANGE: Pass activeForm here!
+ />
+ );}
+    
     switch (activeTab) {
       case 'forms':
-        return showNewForm ? (
-          <NewHikeCycleForm
-            onCancel={() => setShowNewForm(false)}
-            onPublish={handlePublish}
-          />
-        ) : (
+        return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">Review Forms</h2>
               <button
-                onClick={() => setShowNewForm(true)}
+                onClick={() => {
+                  setShowNewForm(true);
+                  setFormToEdit(null); // IMPORTANT: Ensure no initial data when creating a NEW form
+                }}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
                 + New Form
@@ -388,6 +380,10 @@ const AdminDashboard: React.FC = () => {
           </div>
         );
 
+      // ... (rest of your cases for 'templates', 'review-cycles', 'approvals', 'dashboard')
+      // The 'approvals' case already has the handleEditForm button correctly calling setFormToEdit(activeForm)
+    
+
       case 'templates':
         return <TemplateManager />;
 
@@ -403,103 +399,150 @@ const AdminDashboard: React.FC = () => {
           </div>
         );
 
-      case 'approvals':
-        if (activeForm) {
-          return (
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold">Review Form: {activeForm.title}</h3>
-                <button
-                  onClick={() => setActiveForm(null)}
-                  className="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
-                >
-                  Back to List
-                </button>
-              </div>
+     case 'approvals':
+  if (activeForm) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold">Review Form: {activeForm.title}</h3>
+        <button
+          onClick={() => setActiveForm(null)}
+          className="bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
+        >
+          Back to List
+        </button>
+      </div>
 
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-md font-semibold mb-2">Description</h4>
-                  <p className="text-gray-700">{activeForm.description || 'No description provided'}</p>
-                </div>
+      <div className="space-y-6">
+        {/* Description */}
+        <div>
+          <h4 className="text-md font-semibold mb-2">Description</h4>
+          <p className="text-gray-700">{activeForm.description || 'No description provided'}</p>
+        </div>
 
-                <div>
-                  <h4 className="text-md font-semibold mb-3">Form Fields</h4>
-                  <div className="space-y-3">
-                    {activeForm.fields.map(field => (
-                      <div key={field.id} className="border rounded p-4">
-                        <div className="font-medium">{field.label}</div>
-                        <div className="text-sm text-gray-500 capitalize">
-                          {field.type} {field.required && '(required)'}
-                        </div>
-                        {field.type === 'select' && (
-                          <div className="mt-2 text-sm">
-                            Options: {field.options?.join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {/* Cycle Details */}
+        <div className="space-y-4">
+          <div className="border rounded p-4">
+            <h4 className="font-semibold">Cycle Type</h4>
+            <p>{activeForm.cycleTypeName || 'N/A'}</p>
+          </div>
 
-                <div>
-                  <h4 className="text-md font-semibold mb-3">Approval Workflow</h4>
-                  <div className="space-y-3">
-                    {activeForm.approvalLevels.map(level => (
-                      <div key={level.level} className="border rounded p-3">
-                        <div className="flex justify-between">
-                          <div>
-                            <span className="font-medium">Level {level.level}: {level.title}</span>
-                            {level.isFinalApproval && (
-                              <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                Final Approval
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="mt-1 text-sm text-gray-600">
-                          Approvers: {level.approvers.join(', ')}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          <div className="border rounded p-4">
+            <h4 className="font-semibold">Review Period Start</h4>
+            <p>{new Date(activeForm.reviewPeriodStartDate ?? '').toLocaleDateString()}</p>
+          </div>
 
-                <div className="border-t pt-6">
-                  <h4 className="text-md font-semibold mb-4">Approval Decision</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Feedback (Required for rejection)
-                      </label>
-                      <textarea
-                        value={rejectReason}
-                        onChange={(e) => setRejectReason(e.target.value)}
-                        className="border rounded px-3 py-2 w-full"
-                        rows={3}
-                        placeholder="Provide feedback or reason for rejection..."
-                      />
+          <div className="border rounded p-4">
+            <h4 className="font-semibold">Review Period End</h4>
+            <p>{new Date(activeForm.reviewPeriodEndDate ?? '').toLocaleDateString()}</p>
+          </div>
+
+          <div className="border rounded p-4">
+            <h4 className="font-semibold">Cycle Deadline</h4>
+            <p>{new Date(activeForm.cycleDeadline ?? '').toLocaleDateString()}</p>
+          </div>
+
+          {/* Selected Assessment Options */}
+          <div className="border rounded p-4">
+            <h4 className="font-semibold mb-2">Selected Assessment Options</h4>
+            {activeForm.assessmentSelections && activeForm.assessmentSelections.length > 0 ? (
+              <div className="space-y-2">
+                {activeForm.assessmentSelections.map((group, index) => (
+                  <div key={index}>
+                    <div className="text-sm font-semibold text-gray-700 mb-1">
+                      Selected {group.type}(s):
                     </div>
-                    <div className="flex justify-end gap-4">
-                      <button
-                        onClick={() => handleRejectClick(activeForm.id)}
-                        className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => handleApproveHikeForm(activeForm.id)}
-                        className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
-                      >
-                        Approve & Publish
-                      </button>
-                    </div>
+                    <div className="text-sm text-gray-700">{group.values.join(', ')}</div>
                   </div>
-                </div>
+                ))}
               </div>
+            ) : (
+              <p className="text-gray-500">No options selected</p>
+            )}
+          </div>
+        </div>
+
+        {/* Review Levels */}
+        <div>
+          <h4 className="text-md font-semibold mb-3">Review Levels</h4>
+          {Array.isArray(activeForm.reviewLevels) && activeForm.reviewLevels.length > 0 ? (
+            <ul className="space-y-3">
+              {activeForm.reviewLevels.map((level, index) => (
+                <li key={index} className="border p-3 rounded">
+                  <div className="font-semibold">Level {level.reviewOrder}: {level.name}</div>
+                  <div className="text-sm text-gray-600">Reviewer: {level.reviewerName || 'N/A'}</div>
+                  <div className="text-sm text-gray-600">Deadline: {new Date(level.deadline ?? '').toLocaleDateString()}</div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No review levels configured</p>
+          )}
+        </div>
+
+        {/* Assessment Categories and Questions */}
+        <div>
+          <h4 className="text-md font-semibold mb-3">Assessment Categories & Questions</h4>
+          {Array.isArray(activeForm.assessmentCategories) && activeForm.assessmentCategories.length > 0 ? (
+            <ul className="space-y-4">
+              {activeForm.assessmentCategories.map((cat, idx) => (
+                <li key={idx} className="border p-3 rounded">
+                  <div className="font-semibold">{cat.categoryName}</div>
+                  <ul className="list-disc pl-5 text-gray-700 mt-2 space-y-1">
+                    {cat.questions?.map((q: string, i: number) => (
+                      <li key={i}>{q}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No assessment questions added</p>
+          )}
+        </div>
+
+        {/* Approval Decision */}
+        <div className="border-t pt-6">
+          <h4 className="text-md font-semibold mb-4">Approval Decision</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Feedback (Required for rejection)
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                className="border rounded px-3 py-2 w-full"
+                rows={3}
+                placeholder="Provide feedback or reason for rejection..."
+              />
             </div>
-          );
-        }
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => handleRejectClick(activeForm.id)}
+                className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+              >
+                Reject
+              </button>
+              <button
+                        onClick={handleEditForm} // Call the new handler
+                        className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+                      >
+                        Edit
+                      </button>
+              <button
+                onClick={() => handleApproveHikeForm(activeForm.id)}
+                className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+              >
+                Approve & Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    );
+  }
 
         return selectedApproval ? (
           <ApprovalDetails
@@ -511,26 +554,27 @@ const AdminDashboard: React.FC = () => {
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Form Approvals ({staticPendingApprovals.length})</h2>
+              <h2 className="text-xl font-semibold">Form Approvals ({pendingApprovals.length})</h2>
+
             </div>
 
-            {staticPendingApprovals.length > 0 ? (
+            {pendingApprovals.length > 0 ? (
               <div className="bg-white rounded-lg shadow overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Form Title</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fields</th>
+                
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {staticPendingApprovals.map(form => (
+                  {pendingApprovals.map(form => (
                       <tr key={form.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap font-medium">{form.title}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{form.fields.length}</td>
+                     
                         <td className="px-6 py-4 whitespace-nowrap">
                           {new Date(form.createdAt).toLocaleDateString()}
                         </td>
@@ -779,7 +823,7 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div className="mb-8 bg-white rounded-lg shadow p-6" style={{ height: 400 }}>
+            <div className="mb-8 bg-white rounded-lg shadow p-6 flex justify-center items-center h-auto min-h-[280px]">
               <PieChart
                 data={selectedPieData}
                 title={`${selectedCycle?.name} - Status Distribution`}

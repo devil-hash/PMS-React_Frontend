@@ -27,9 +27,15 @@ const App: React.FC = () => {
             <Route path="/manager" element={<ManagerDashboard />} />
           </Route>
           
-          <Route element={<ProtectedRoute allowedRoles={['hr']} />}>
-            <Route path="/hr" element={<HRDashboard />} />
-          </Route>
+       <Route element={
+  <ProtectedRoute
+    allowedDepartments={['human resource']}
+    excludeRoles={['admin']}
+  />
+}>
+  <Route path="/hr" element={<HRDashboard />} />
+</Route>
+
           
           <Route element={<ProtectedRoute allowedRoles={['employee']} />}>
             <Route path="/employee" element={<EmployeeDashboard />} />

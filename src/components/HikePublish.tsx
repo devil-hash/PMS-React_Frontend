@@ -284,10 +284,13 @@ const HikePublish: React.FC<{
   return (
     <div className="space-y-6">
       {showNewHikeForm && (
-        <NewHikeCycleForm 
-          onCancel={handleCancelNewHikeForm} 
-          onPublish={handlePublishNewHikeForm} 
-        />
+       <NewHikeCycleForm 
+  onCancel={handleCancelNewHikeForm} 
+  onPublish={handlePublishNewHikeForm} 
+  userDepartment="Human Resource"
+  userRole="HR Executive"
+/>
+
       )}
 
       {!showNewHikeForm && (

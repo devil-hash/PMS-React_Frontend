@@ -1,98 +1,69 @@
-// src/components/PieChart.tsx
+// components/BarChart.tsx
 import React from 'react';
-import { PieChart as RechartsPieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+  Legend,
+  LabelList,
+} from 'recharts';
 
-export interface PieChartData {
+interface BarChartData {
   name: string;
   value: number;
-  color?: string;
+  color?: string; // Optional, can still override
 }
 
-interface PieChartProps {
-  data: PieChartData[];
-  colors?: string[];
+interface BarChartProps {
+  data: BarChartData[];
   title?: string;
-  width?: number | string;
-  height?: number;
-  outerRadius?: number;
-  innerRadius?: number;
-  legendVerticalAlign?: 'top' | 'bottom' | 'middle';
-  legendLayout?: 'horizontal' | 'vertical';
-  showLabel?: boolean;
 }
 
-const DEFAULT_COLORS = ['#4CAF50', '#FFB300', '#F44336', '#03A9F4', '#9C27B0', '#607D8B'];
+const defaultColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6'];
 
-export const PieChart: React.FC<PieChartProps> = ({
-  data,
-  colors = DEFAULT_COLORS,
-  title,
-  width = '100%',
-  height = 300,
-  outerRadius = 80,
-  innerRadius = 0,
-  legendVerticalAlign = 'bottom',
-  legendLayout = 'horizontal',
-  showLabel = true
-}) => {
-  if (!data || data.length === 0) {
-    return (
-      <div className="pie-chart-empty">
-        <p>No data available</p>
-      </div>
-    );
-  }
-
-  const getColor = (entry: PieChartData, index: number) => 
-    entry.color || colors[index % colors.length];
-
+const BarChart: React.FC<BarChartProps> = ({ data, title }) => {
   return (
-    <div className="pie-chart-container">
-      {title && <h4 className="pie-chart-title">{title}</h4>}
-      <div style={{ width, height }}>
-        <ResponsiveContainer>
-          <RechartsPieChart>
-            <Pie
-              data={data}
+    <div className="w-full h-full">
+      {title && <h3 className="text-lg font-semibold mb-4">{title}</h3>}
+      <ResponsiveContainer width="100%" height={data.length * 60}>
+        <RechartsBarChart
+          layout="vertical"
+          data={data}
+          margin={{ top: 10, right: 40, left: 40, bottom: 10 }}
+          barCategoryGap={15}
+        >
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+          <XAxis type="number" tick={{ fontSize: 12 }} />
+          <YAxis
+            type="category"
+            dataKey="name"
+            tick={{ fontSize: 14, fontWeight: 500 }}
+            width={120}
+          />
+          <Tooltip />
+          
+          <Bar dataKey="value" barSize={22} radius={[0, 10, 10, 0]}>
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.color || defaultColors[index % defaultColors.length]}
+              />
+            ))}
+            <LabelList
               dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={outerRadius}
-              innerRadius={innerRadius}
-              label={showLabel ? ({
-                name,
-                percent
-              }) => `${name}: ${(percent * 100).toFixed(0)}%` : false}
-              labelLine={showLabel}
-            >
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={getColor(entry, index)} 
-                />
-              ))}
-            </Pie>
-            <Tooltip 
-              formatter={(value: number, name: string) => [
-                value, 
-                name
-              ]} 
+              position="right"
+              style={{ fill: '#111827', fontWeight: 'bold' }}
             />
-            <Legend 
-              layout={legendLayout}
-              verticalAlign={legendVerticalAlign}
-              height={legendVerticalAlign === 'bottom' ? 36 : undefined}
-              wrapperStyle={{
-                paddingTop: legendVerticalAlign === 'top' ? '0' : '0px'
-              }}
-            />
-          </RechartsPieChart>
-        </ResponsiveContainer>
-      </div>
+          </Bar>
+        </RechartsBarChart>
+      </ResponsiveContainer>
     </div>
-    
-
   );
 };
-export default PieChart;
+
+export default BarChart;

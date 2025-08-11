@@ -36,6 +36,8 @@ const HRDashboard: React.FC = () => {
     approvers: [],
     isFinalApproval: false
   });
+const userDepartment: string = 'Human Resource';
+const userRole: string = 'HR Executive';
 
   // Static data for pending approvals
   const staticPendingApprovals: HikeForm[] = [
@@ -361,33 +363,44 @@ const HRDashboard: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'forms':
-        return showNewForm ? (
+       case 'forms':
+      return showNewForm ? (
+        userDepartment === 'Human Resource' && userRole !== 'Admin' ? (
           <NewHikeCycleForm
             onCancel={() => setShowNewForm(false)}
             onPublish={handlePublish}
+            userDepartment={userDepartment}
+            userRole={userRole}
           />
         ) : (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Performance Review Forms</h2>
+          <div className="text-red-600 font-medium">
+            You do not have permission to create a new Hike Cycle Form.
+          </div>
+        )
+      ) : (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Performance Review Forms</h2>
+            {userDepartment === 'Human Resource' && userRole !== 'Admin' && (
               <button
                 onClick={() => setShowNewForm(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
                 + New Form
               </button>
-            </div>
-            <ul className="bg-white shadow rounded divide-y">
-              {existingForms.map(form => (
-                <li key={form.id} className="p-4 flex justify-between">
-                  <span>{form.name}</span>
-                  <span className="text-sm text-gray-500">Created by {form.createdBy} on {form.createdOn}</span>
-                </li>
-              ))}
-            </ul>
+            )}
           </div>
-        );
+          <ul className="bg-white shadow rounded divide-y">
+            {existingForms.map(form => (
+              <li key={form.id} className="p-4 flex justify-between">
+                <span>{form.name}</span>
+                <span className="text-sm text-gray-500">
+                  Created by {form.createdBy} on {form.createdOn}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>);
 
       case 'templates':
         return <TemplateManager />;
